@@ -5,7 +5,7 @@ class Command(BaseCommand):
     help = 'Create a new user'
 
     def add_arguments(self, parser):
-        parser.add_argument('--username', required=True help="User's name")
+        parser.add_argument('--username', required=True, help="User's name")
         parser.add_argument('--email', required=True, help="User's email")
         parser.add_argument('--password', required=True, help="User's password")
         parser.add_argument('--membership_tier', default='Bronze', help="Membership tier")
