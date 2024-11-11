@@ -1,4 +1,3 @@
-# serializers.py
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
@@ -15,8 +14,8 @@ class MemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ['username', 'email', 'membership_tier', 'user_role','cashback', 'cashback_expiry', 'password']
-        extra_kwargs = {"password": {"write_only": True}}
+        fields = ['id','username', 'passowrd', 'email', 'membership_tier', 'user_role','cashback', 'cashback_expiry']
+        extra_kwargs = {"password": {"read_only": True}}
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,4 +32,3 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ['id', 'event_type', 'date', 'description']
-
