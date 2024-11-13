@@ -1,37 +1,35 @@
-# views.py
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from rest_framework import generics, viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.generics import ListAPIView
-from rest_framework import generics
-from .serializers import *
 from .models import *
-from rest_framework import viewsets
+from .serializers import *
 
-class MemberProfileView(APIView):
-    serializer = MemberSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        Member = self.request.user
-        return MemberSerializer.objects.filter(Member)
-
+# View to create a new Member with authentication
 class CreateMemberView(generics.CreateAPIView):
     serializer_class = MemberSerializer
     permission_classes = [AllowAny]
     queryset = Member.objects.all()
 
-class ProductListView(ListAPIView):
-    queryset = Product.objects.all()
+# View for listing and retrieving Members
+class MemberProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = MemberSerializer
     permission_classes = [IsAuthenticated]
-    serializer_class = ProductSerializer
 
-class IncentiveListView(ListAPIView):
-    queryset = Incentive.objects.all()
+    def get_queryset(self):
+        return Member.objects.filter(id=self.request.user.id)
+
+# Viewset for listing items in the Store and adding new items
+class StoreViewSet(viewsets.ModelViewSet):
+    queryset = Store.objects.all()
+    serializer_class = StoreSerializer
     permission_classes = [IsAuthenticated]
-    serializer_class = IncentiveSerializer
 
+# Viewset for listing events
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
-    permission_classes = [IsAuthenticated]
     serializer_class = EventSerializer
+    permission_classes = [IsAuthenticated]
+
+class MembershipViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Membership.objects.all()
+    serializer_class = MembershipSerializer
+    permission_classes = [IsAuthenticated]
