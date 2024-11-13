@@ -13,7 +13,7 @@ class MemberProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        Member = self.request.Member
+        Member = self.request.user
         return MemberSerializer.objects.filter(Member)
 
 class CreateMemberView(generics.CreateAPIView):
