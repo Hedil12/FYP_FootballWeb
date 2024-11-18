@@ -1,36 +1,55 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from django.contrib.auth.password_validation import validate_password
-from rest_framework.validators import UniqueValidator
-from api.models import *
+from .models import Membership, Role, Member, Store, Cart, Event, MemberEvent
+
+class MembershipSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Membership
+        fields = '__all__'
+
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = '__all__'
 
 class MemberSerializer(serializers.ModelSerializer):
-    user_role = serializers.ChoiceField(choices=Member.USER_ROLES, default='User')
-    membership_tier = serializers.ChoiceField(choices=Member.MEMBERSHIP_TIERS, default='Bronze')
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-
+    user_role = serializers.CharField(default='User')
+    membership_tier = serializers.CharField(default='Bronze')
+    
     class Meta:
         model = Member
-        fields = ['id','username', 'password', 'email', 'membership_tier', 'user_role','cashback', 'cashback_expiry']
-        extra_kwargs = {"password": {"read_only": True}}
+        fields = ['id', 'username', 'password', 'email', 'membership_tier', 'user_role', 'cashback', 'cashback_expiry']
+        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = Member.objects.create_user(password=password, **validated_data)
-        return user
+        password = validated_data.pop('password', None)
+        member = Member(**validated_data)
+        if password:
+            member.set_password(password)
+        member.save()
+        return member
 
-class ProductSerializer(serializers.ModelSerializer):
+class StoreSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Product
-        fields = ['id', 'name', 'price', 'stock', 'discount']
+        model = Store
+        fields = '__all__'
 
-class IncentiveSerializer(serializers.ModelSerializer):
+class CartSerializer(serializers.ModelSerializer):
+    member = MemberSerializer()
+    item = StoreSerializer()
+
     class Meta:
-        model = Incentive
-        fields = ['membership_tier', 'discount_rate', 'cashback_rate']
-
+        model = Cart
+        fields = '__all__'
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        fields = ['id', 'event_type', 'date', 'description']
+        fields = '__all__'
+
+class MemberEventSerializer(serializers.ModelSerializer):
+    member = MemberSerializer()
+    event = EventSerializer()
+
+    class Meta:
+        model = MemberEvent
+        fields = '__all__'
