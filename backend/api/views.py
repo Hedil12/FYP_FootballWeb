@@ -3,6 +3,22 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Member, Store, Event, Membership
 from .serializers import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework.views import APIView
+from .permissions import IsAdmin, IsUser
+from django.http import JsonResponse
+
+class AdminOnlyView(APIView):
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        return JsonResponse({"message": "Welcome Admin!"})
+
+
+class UserOnlyView(APIView):
+    permission_classes = [IsUser]
+
+    def get(self, request):
+        return JsonResponse({"message": "Welcome User!"})
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
