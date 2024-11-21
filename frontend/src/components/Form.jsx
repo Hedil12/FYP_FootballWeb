@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-import LoadingIndicator from '../components/LoadingIndicator'
-import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
-import "../styles/Form.css"
+import LoadingIndicator from '../components/LoadingIndicator';
+import { ACCESS_TOKEN, REFRESH_TOKEN, ROLE } from "../constants";
+import { jwtDecode } from "jwt-decode";
+import "../styles/Form.css";
 
+function Form({ route, method }) {
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [email, setEmail] = useState("");
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
-function Form({route, method}){
-    const [username, setUsername] = useState("")
-    const [password, setPassword] = useState("")
-    const [email, setEmail] = useState("")
-    const [loading, setLoading] = useState(false)
-    const navigate = useNavigate()
-
-    const name = method === "login" ? "Login":"Register";
+    const name = method === "login" ? "Login" : "Register";
 
     const handleSubmit = async (e) => {
         setLoading(true);
@@ -22,20 +22,31 @@ function Form({route, method}){
         if (!username || !email || !password) {
             alert("All fields are required");
             setLoading(false);
+            return;
         }
 
         try {
-            const res = await api.post(route, {username, email, password})
-            if (method === "login"){
-                localStorage.setItem(ACCESS_TOKEN, res.data.access);
-                localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
-                console.log('Login successful', res.data)
-                navigate("/")
+            const res = await api.post(route, { username, email, password });
+            if (method === "login") {
+                const token = res.data;
+                const decoded = jwtDecode(token.access);
+                localStorage.setItem(ACCESS_TOKEN, token.access);
+                localStorage.setItem(REFRESH_TOKEN, token.refresh);
+                localStorage.setItem(ROLE, decoded.role);
+
+                console.log('Login successful', token);
+
+                // Redirect based on role
+                if (decoded.role === 'Admin') {
+                    navigate('/admin');
+                } else {
+                    navigate('/user');
+                }
             } else {
-                navigate("/login")
-                console.log('Register successful', res.data)
+                navigate("/login");
+                console.log('Register successful', res.data);
             }
-        } catch (error){
+        } catch (error) {
             alert("Login failed: " + error.response?.data?.detail || error.message);
             console.log("Login failed: " + error.response?.data?.detail || error.message);
         } finally {
