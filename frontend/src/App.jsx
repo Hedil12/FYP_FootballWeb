@@ -24,7 +24,7 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route
-          path="/admin"
+          path="/admin/*"
           element={
             <ProtectedRoute allowedRoles={['Admin']}>
               <StaffDashboard />
@@ -32,7 +32,7 @@ function App() {
           }
         />
         <Route
-          path="/user"
+          path="/user/*"
           element={
             <ProtectedRoute allowedRoles={['User']}>
               <UserDashboard />

@@ -15,7 +15,7 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
         # Add additional user information to the response
         data['member_name'] = user.member_name
         data['email'] = user.member_email
-        data['role'] = user.role.role_type if user.role else None
+        data['role'] = user.role.role_type
         return data
 
 

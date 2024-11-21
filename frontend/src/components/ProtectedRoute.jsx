@@ -42,8 +42,8 @@ function ProtectedRoute({ children, allowedRoles }) {
         if (tokenExpiration < now) {
             await refreshToken();
         } else {
-            const userRole = localStorage.getItem(ROLE) || decoded.role;
-            if (allowedRoles.includes(userRole)) {
+            const userRole = localStorage.getItem(ROLE);
+            if (!userRole || !allowedRoles.includes(userRole)) {
                 setIsAuthorized(true);
             } else {
                 setIsAuthorized(false);
