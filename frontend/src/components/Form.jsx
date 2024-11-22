@@ -34,11 +34,12 @@ function Form({ route, method }) {
                 localStorage.setItem(REFRESH_TOKEN, token.refresh);
                 localStorage.setItem(ROLE, decoded.role);
 
+                console.log('Decode Token:', decoded);
                 console.log('User Role: ', decoded.role);
                 console.log('Login successful', token);
 
                 // Redirect based on role
-                navigate(decoded.role === 'Admin' ? "/admin" : "/user");
+                navigate(decoded.role === 'Admin' ? "/admin" : "/user/home");
             } else {
                 navigate("/login");
                 console.log('Register successful', res.data);

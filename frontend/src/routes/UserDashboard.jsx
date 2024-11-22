@@ -4,7 +4,6 @@ import Home from "../pages/Home";
 import Profile from "../pages/Profile";
 import IncentiveProgram from "../pages/IncentiveProgram";
 import EventList from "../pages/EventList";
-import NotFound from "../pages/NotFound";
 
 function LogOut() {
   localStorage.clear();
@@ -15,16 +14,12 @@ function UserDashboard() {
   return (
     <div className="container">
       <h1>User Dashboard</h1>
-      <nav>
-        <Link to="home">Home</Link> | <Link to="profile">Profile</Link>
-      </nav>
       <Routes>
-        <Route path="home" element={<Home />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="incentives" element={<IncentiveProgram />} />
-        <Route path="events" element={<EventList />} />
-        <Route path="logout" element={<LogOut />} />
-        <Route path="*" element={<NotFound />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/user/profile" element={<Profile />} />
+        <Route path="/user/incentives" element={<IncentiveProgram />} />
+        <Route path="/user/events" element={<EventList />} />
+        <Route path="/user/logout" element={<LogOut />} />
       </Routes>
     </div>
   );

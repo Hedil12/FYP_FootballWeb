@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
+from rest_framework_simplejwt.tokens import RefreshToken
 
 class Membership(models.Model):
     membership_tier = models.BigAutoField(primary_key=True)
@@ -69,6 +70,15 @@ class Member(AbstractBaseUser, PermissionsMixin):
     @property
     def id(self):
         return self.member_id
+
+    def get_tokens_for_user(user):
+        refresh = RefreshToken.for_user(user)
+        refresh['role'] = user.role  # Assuming `role` is a field in your User model
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+
 
 class Store(models.Model):
     item_id = models.BigAutoField(primary_key=True)

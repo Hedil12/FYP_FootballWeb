@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Member, Store, Event, Membership
 from .serializers import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework.views import APIView
+from rest_framework.views import APIView, Response
 from .permissions import IsAdmin, IsUser
 from django.http import JsonResponse
 
@@ -40,6 +40,17 @@ class MemberProfileView(generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         return Member.objects.filter(id=self.request.user.id)
+    
+    def get_object(self):
+        return self.request.user
+    
+    def get(self, request, *args, **kwargs):
+        user = self.get_object()
+        return Response({
+            "username": user.username,
+            "email": user.email,
+            "role": user.role.role_type if user.role else None,
+        })
 
 
 # Viewset for Store: Restricted to authenticated users
