@@ -3,20 +3,26 @@ import { Link } from "react-router-dom";
 import api from "../api";
 
 function Home(){
-    const [profile, setProfile] = useState("")
-
+    const [profile, setProfile] = useState(null);
+    const [error, setError] = useState(null);
+  
     useEffect(() => {
-        getProfile()
-    }, [])
-
-    const getProfile = async () =>
-        api.get("api/profile/")
-    .then((res) => res.data)
-    .then((data) => setProfile(data))
-    .catch((err)=>{
-        console.log('Error: ', err)
-        alert(err);
-    })
+      const fetchProfile = async () => {
+        try {
+          const response = await api.get("api/profile/", {
+              headers: {
+                  Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                  'Content-type': 'application/json',
+                  }
+          }); // Correct relative endpoint
+          setProfile(response.data);
+        } catch (err) {
+          setError(err.message);
+        }
+      };
+  
+      fetchProfile();
+    }, []);
 
     return (
         <div className="container">

@@ -34,24 +34,13 @@ class CreateMemberView(generics.CreateAPIView):
 
 
 # View to retrieve and update the authenticated Member's profile
-class MemberProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = MemberSerializer
+class MemberProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Member.objects.filter(id=self.request.user.id)
-    
-    def get_object(self):
-        return self.request.user
-    
-    def get(self, request, *args, **kwargs):
-        user = self.get_object()
-        return Response({
-            "username": user.username,
-            "email": user.email,
-            "role": user.role.role_type if user.role else None,
-        })
-
+    def get(self, request):
+        """Retrieve user profile."""
+        serializer = MemberSerializer(request.user)  # Pass the user object
+        return Response(serializer.data, status=200)
 
 # Viewset for Store: Restricted to authenticated users
 class StoreViewSet(viewsets.ModelViewSet):

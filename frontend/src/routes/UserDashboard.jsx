@@ -15,11 +15,12 @@ function UserDashboard() {
     <div className="container">
       <h1>User Dashboard</h1>
       <Routes>
-        <Route path="/home" element={<Home />} />
-        <Route path="/user/profile" element={<Profile />} />
-        <Route path="/user/incentives" element={<IncentiveProgram />} />
-        <Route path="/user/events" element={<EventList />} />
-        <Route path="/user/logout" element={<LogOut />} />
+        <Route path="/user/home" element={<Navigate to="/home" />} />
+        <Route path="home" element={<Home />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="incentives" element={<IncentiveProgram />} />
+        <Route path="events" element={<EventList />} />
+        <Route path="logout" element={<LogOut />} />
       </Routes>
     </div>
   );

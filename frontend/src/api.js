@@ -4,8 +4,22 @@ import { ACCESS_TOKEN } from "./constants";
 
 
 const api = axios.create({
-    baseURL: "http://127.0.0.1:5000/"
+    baseURL: "http://127.0.0.1:5000/",
+    withCredentials: true,
+    headers: {
+        'Content-Type': 'application/json',
+      },
 });
+
+const handle401Error = async (error) => {
+    if (error.response?.status === 401) {
+      // Try refreshing the token
+      await refreshToken();
+      // Retry the original request with the new token
+      return api.request(error.config);
+    }
+    return Promise.reject(error);
+  };
 
 api.interceptors.request.use(
     (config) => {
@@ -16,9 +30,7 @@ api.interceptors.request.use(
         console.log(config.headers);
         return config
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    async (error) => handle401Error(error)
 )
 
 export default api

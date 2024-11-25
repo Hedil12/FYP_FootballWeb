@@ -28,28 +28,39 @@ function ProtectedRoute({ children, allowedRoles }) {
             setIsAuthorized(false);
         }
     };
+    
+    const isTokenValid = (token) => {
+        if (!token) return false;
+        const { exp } = jwtDecode(token); // Decode the JWT
+        const now = Date.now() / 1000;   // Current time in seconds
+        return exp > now;               // Token is valid if `exp` is in the future
+    };
+    
 
     const auth = async () => {
-        const token = localStorage.getItem(ACCESS_TOKEN);
-        if (!token) {
-            return setIsAuthorized(false);
+        const accessToken = localStorage.getItem(ACCESS_TOKEN);
+        const refreshToken = localStorage.getItem(REFRESH_TOKEN);
+    
+        if (!accessToken || !refreshToken) {
+            return setIsAuthorized(false); // No tokens, unauthenticated
         }
-
-        const decoded = jwtDecode(token);
-        const tokenExpiration = decoded.exp;
-        const now = Date.now() / 1000;
-
-        if (tokenExpiration < now) {
-            await refreshToken();
-        } else {
-            const userRole = localStorage.getItem(ROLE);
-            if (!userRole || !allowedRoles.includes(userRole)) {
+    
+        const isValid = isTokenValid(accessToken);
+        if (!isValid) {
+            try {
+                // Attempt to refresh the token
+                const res = await api.post("/api/token/refresh/", { refresh: refreshToken });
+                localStorage.setItem(ACCESS_TOKEN, res.data.access);
                 setIsAuthorized(true);
-            } else {
+            } catch (error) {
+                console.error("Token refresh failed:", error);
                 setIsAuthorized(false);
             }
+        } else {
+            setIsAuthorized(true); // Token is valid
         }
     };
+    
 
     if (isAuthorized === null) {
         return <div>Loading...</div>;
