@@ -19,14 +19,24 @@ function Form({ route, method }) {
         setLoading(true);
         e.preventDefault();
 
-        if (!username || !email || !password) {
+        if (!username || !password) {
+            alert("All fields are required");
+            setLoading(false);
+            return;
+        }
+        
+        if (method === "login" && (!username || !password)) {
+            alert("Username and password are required");
+            setLoading(false);
+            return;
+        } else if (method !== "login" && (!username || !password)) {
             alert("All fields are required");
             setLoading(false);
             return;
         }
 
         try {
-            const res = await api.post(route, { username, email, password });
+            const res = await api.post(route, { username, password });
             if (method === "login") {
                 const token = res.data;
                 const decoded = jwtDecode(token.access);
@@ -34,14 +44,12 @@ function Form({ route, method }) {
                 localStorage.setItem(REFRESH_TOKEN, token.refresh);
                 localStorage.setItem(ROLE, decoded.role);
 
+                console.log('Decode Token:', decoded);
+                console.log('User Role: ', decoded.role);
                 console.log('Login successful', token);
 
                 // Redirect based on role
-                if (decoded.role === 'Admin') {
-                    navigate('/admin');
-                } else {
-                    navigate('/user');
-                }
+                navigate(decoded.role === 'Admin' ? "/admin" : "/user/home");
             } else {
                 navigate("/login");
                 console.log('Register successful', res.data);
@@ -63,13 +71,6 @@ function Form({ route, method }) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Username"
-            />
-            <input
-                className="form-input"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="E-mail"
             />
             <input
                 className="form-input"

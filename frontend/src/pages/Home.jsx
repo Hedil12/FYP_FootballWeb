@@ -3,42 +3,27 @@ import { Link } from "react-router-dom";
 import api from "../api";
 
 function Home(){
-    //const [membership, setMembership] = useState([])
-    const [profile, setProfile] = useState("")
-    //const [catalog, setCatalog] = useState([])
-    //const [event, setEvents] = useState([])
-
+    const [profile, setProfile] = useState(null);
+    const [error, setError] = useState(null);
+  
     useEffect(() => {
-        getProfile()
-        /*getMembership(),
-        getCatalog(),
-        getEvents()*/
-    }, [])
+      const fetchProfile = async () => {
+        try {
+          const response = await api.get("api/profile/", {
+              headers: {
+                  Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                  'Content-type': 'application/json',
+                  }
+          }); // Correct relative endpoint
+          setProfile(response.data);
+        } catch (err) {
+          setError(err.message);
+        }
+      };
+  
+      fetchProfile();
+    }, []);
 
-    const getProfile = () =>
-        api.get("api/profile/")
-    .then((res) => res.data)
-    .then((data) => setProfile(data))
-    .catch((err)=>alert(err))
-/*
-    const getMembership = () =>
-        api.get("api/incentives/")
-    .then((res) => res.data)
-    .then((data) => setMembership(data))
-    .catch((err)=>alert(err))
-
-    const getCatalog = () =>
-        api.get("api/products/")
-    .then((res) => res.data)
-    .then((data) => setCatalog(data))
-    .catch((err)=>alert(err))
-
-    const getEvents = () =>
-        api.get("api/events/")
-    .then((res) => res.data)
-    .then((data) => setEvents(data))
-    .catch((err)=>alert(err))
-*/
     return (
         <div className="container">
             <div className="info">

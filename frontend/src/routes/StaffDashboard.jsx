@@ -27,7 +27,7 @@ function StaffDashboard() {
         <Route path="/register" element={<RegisterUsers />} />
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<LogOut />} />
-        <Route path="*" element={<NotFound/>}></Route>
+        <Route path="/*" element={<NotFound/>}></Route>
       </Routes>
     </BrowserRouter>
   )

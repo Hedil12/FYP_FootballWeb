@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Member, Store, Event, Membership
 from .serializers import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework.views import APIView
+from rest_framework.views import APIView, Response
 from .permissions import IsAdmin, IsUser
 from django.http import JsonResponse
 
@@ -34,13 +34,13 @@ class CreateMemberView(generics.CreateAPIView):
 
 
 # View to retrieve and update the authenticated Member's profile
-class MemberProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = MemberSerializer
+class MemberProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Member.objects.filter(id=self.request.user.id)
-
+    def get(self, request):
+        """Retrieve user profile."""
+        serializer = MemberSerializer(request.user)  # Pass the user object
+        return Response(serializer.data, status=200)
 
 # Viewset for Store: Restricted to authenticated users
 class StoreViewSet(viewsets.ModelViewSet):
