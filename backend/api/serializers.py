@@ -10,7 +10,7 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
 
         # Get the user associated with the refresh token
         refresh_token = RefreshToken(attrs['refresh'])
-        user = Member.objects.get(id=refresh_token['user_id'])
+        user = Member.objects.get(member_id=refresh_token['user_id'])
 
         # Add additional user information to the response
         data['member_name'] = user.member_name
@@ -61,7 +61,12 @@ class MemberSerializer(serializers.ModelSerializer):
 class StoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Store
-        fields = '__all__'
+        fields = ['item_name', 'item_desc', 'item_qty', 'item_price', 'discount_rates']
+
+    def create(self, validated_data):
+        # You can add custom logic here if needed before saving
+        store = Store.objects.create(**validated_data)
+        return store
 
 class CartSerializer(serializers.ModelSerializer):
     class Meta:

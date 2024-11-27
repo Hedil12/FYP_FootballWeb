@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import LoadingIndicator from '../components/LoadingIndicator';
-import { ACCESS_TOKEN, REFRESH_TOKEN, ROLE } from "../constants";
+import { ACCESS_TOKEN, REFRESH_TOKEN, UserInfo, ROLE } from "../constants";
 import { jwtDecode } from "jwt-decode";
 import "../styles/Form.css";
 
@@ -42,14 +42,16 @@ function Form({ route, method }) {
                 const decoded = jwtDecode(token.access);
                 localStorage.setItem(ACCESS_TOKEN, token.access);
                 localStorage.setItem(REFRESH_TOKEN, token.refresh);
-                localStorage.setItem(ROLE, decoded.role);
+                localStorage.setItem(UserInfo, token);
+                localStorage.setItem(ROLE, token.role);
 
                 console.log('Decode Token:', decoded);
-                console.log('User Role: ', decoded.role);
+                console.log('User Info: ', token);
+                console.log("User Role: ", token.role)
                 console.log('Login successful', token);
 
                 // Redirect based on role
-                navigate(decoded.role === 'Admin' ? "/admin" : "/user/home");
+                navigate(token.role === 'Admin' ? "/admin-Dashboard" : "/user-Dashboard");
             } else {
                 navigate("/login");
                 console.log('Register successful', res.data);

@@ -73,7 +73,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
 
     def get_tokens_for_user(user):
         refresh = RefreshToken.for_user(user)
-        refresh['role'] = user.role  # Assuming `role` is a field in your User model
+        refresh['role'] = user.role.role_type  # Assuming `role` is a field in your User model
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
