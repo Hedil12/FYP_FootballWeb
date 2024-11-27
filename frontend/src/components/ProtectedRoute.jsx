@@ -1,11 +1,12 @@
 import { Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import api from '../api';
+import api from "../api";
 import { REFRESH_TOKEN, ACCESS_TOKEN, ROLE } from "../constants";
 import { useState, useEffect } from "react";
 
-function ProtectedRoute({ children, allowedRoles }) {
+function ProtectedRoute({ children, requiredRole }) {
     const [isAuthorized, setIsAuthorized] = useState(null);
+    const [userRole, setUserRole] = useState(null);
 
     useEffect(() => {
         auth().catch(() => setIsAuthorized(false));
@@ -24,46 +25,40 @@ function ProtectedRoute({ children, allowedRoles }) {
                 setIsAuthorized(false);
             }
         } catch (error) {
-            console.error("Error refreshing token:", error);
+            console.log(error);
             setIsAuthorized(false);
         }
     };
-    
-    const isTokenValid = (token) => {
-        if (!token) return false;
-        const { exp } = jwtDecode(token); // Decode the JWT
-        const now = Date.now() / 1000;   // Current time in seconds
-        return exp > now;               // Token is valid if `exp` is in the future
-    };
-    
 
     const auth = async () => {
-        const accessToken = localStorage.getItem(ACCESS_TOKEN);
-        const refreshToken = localStorage.getItem(REFRESH_TOKEN);
-    
-        if (!accessToken || !refreshToken) {
-            return setIsAuthorized(false); // No tokens, unauthenticated
+        const token = localStorage.getItem(ACCESS_TOKEN);
+        if (!token) {
+            setIsAuthorized(false);
+            return;
         }
-    
-        const isValid = isTokenValid(accessToken);
-        if (!isValid) {
-            try {
-                // Attempt to refresh the token
-                const res = await api.post("/api/token/refresh/", { refresh: refreshToken });
-                localStorage.setItem(ACCESS_TOKEN, res.data.access);
-                setIsAuthorized(true);
-            } catch (error) {
-                console.error("Token refresh failed:", error);
-                setIsAuthorized(false);
-            }
+
+        const decoded = jwtDecode(token);
+        const tokenExpiration = decoded.exp;
+        const now = Date.now() / 1000;
+
+        // Get user role from localStorage
+        const storedRole = localStorage.getItem(ROLE);
+        setUserRole(storedRole);
+
+        if (tokenExpiration < now) {
+            await refreshToken();
         } else {
-            setIsAuthorized(true); // Token is valid
+            setIsAuthorized(true);
         }
     };
-    
 
     if (isAuthorized === null) {
         return <div>Loading...</div>;
+    }
+
+    // Role-based redirection
+    if (requiredRole && userRole !== requiredRole) {
+        return <Navigate to="/login" />;
     }
 
     return isAuthorized ? children : <Navigate to="/login" />;

@@ -4,7 +4,9 @@ from .views import *
 urlpatterns = [
     #Viewed by Members
     path('profile/', MemberProfileView.as_view(), name='profile'),
-    path('products/', StoreViewSet.as_view({'get':'list'}), name='store-list'),
+    path('products/', StoreListCreateView.as_view(), name='store-list-create'),
+    path('products/delete/<int:item_id>/', StoreDeleteItem.as_view(), name='store-delete'),
+    path('products/edit/<int:item_id>/', StoreUpdateItem.as_view(), name='store-update'),
     path('membership/', MembershipViewSet.as_view({'get':'list'}), name='membership-list'),
     path('events/', EventViewSet.as_view({'get':'list'}), name='event-list'),
 
