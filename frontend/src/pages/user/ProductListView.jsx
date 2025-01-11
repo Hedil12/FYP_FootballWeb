@@ -18,7 +18,7 @@ const ProductListView = () => {
       const response = await api.get("api/products/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
-          "Content-type": "application/json",
+          "Content-Type": "multipart/form-data",
         },
       });
       setStoreItems(response.data);
@@ -55,9 +55,8 @@ const ProductListView = () => {
         {filteredItems.map((item) => (
           <div key={item.item_id} className="product-card">
             <img
-              src={item.item_image_url} // URL from the database
-              alt={item.item_name}
-              className="product-image"
+              src={item.item_img ? `https://res.cloudinary.com/dzieqk9ly/${item.item_img}` : "https://res.cloudinary.com/dzieqk9ly/image/upload/v1736636312/No_Image_Available_pt1pcr.jpg"}
+              alt={item.item_name || "No Name"}
             />
             <h3>{item.item_name}</h3>
             <p>{item.item_desc}</p>
