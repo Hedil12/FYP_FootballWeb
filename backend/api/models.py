@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
-from django.utils import timezone
+#from django.contrib.postgres.fields import ArrayField
+from cloudinary.models import CloudinaryField
 from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -87,8 +88,12 @@ class Store(models.Model):
     item_qty = models.BigIntegerField()
     item_price = models.DecimalField(max_digits=8, decimal_places=2)
     discount_rates = models.DecimalField(max_digits=8, decimal_places=2)
-
-    REQURIED_FIELDS = ['item_name', 'item_desc', 'item_qty', 'item_price', 'discount_rates']
+    is_available = models.BooleanField(default=True)
+    item_img = CloudinaryField('image', blank=True, null=True, default='')
+    
+    REQURIED_FIELDS = ['item_name', 'item_desc', 'item_qty', 
+                       'item_price', 'discount_rates',
+                       'is_available', 'item_img']
 
 class Cart(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)

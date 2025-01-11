@@ -33,6 +33,9 @@ function DashboardUser() {
             <Link to="membership">Incentive Program</Link>
           </li>
           <li>
+            <Link to="store">Store</Link>
+          </li>
+          <li>
             <Link to="events">Events</Link>
           </li>
           <li>

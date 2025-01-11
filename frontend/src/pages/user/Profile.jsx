@@ -33,7 +33,9 @@ function Profile() {
             <h1>Profile</h1>
             <p><strong>Username:</strong> {profile.username}</p>
             <p><strong>Email:</strong> {profile.member_email}</p>
-            <p><strong>Membership Tier:</strong> {profile.membership_tier === 1? "Silver":"Bronze"}</p>
+            <p><strong>Membership Tier:</strong> {profile.membership_id === 1? "Bronze":
+             profile.membership_id === 2? "Silver":
+             profile.membership_id === 3? "Gold": "Admin"}</p>
             <p><strong>Cashback Points:</strong> {profile.cashback_points > 0? profile.cashback_points : 0}</p>
             <p><strong>Expirtation Date:</strong> {profile.expiration_date}</p>
         </div>

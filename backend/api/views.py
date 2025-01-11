@@ -1,11 +1,12 @@
-from rest_framework import generics, viewsets, status
+from rest_framework import generics, viewsets, permissions, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Member, Store, Event, Membership
-from .serializers import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.views import APIView, Response
-from rest_framework import permissions
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from .models import Member, Store, Event, Membership
+from .serializers import *
+from cloudinary.uploader import destroy, upload
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -54,26 +55,74 @@ class MemberProfileView(APIView):
         return Response(serializer.data, status=200)
 
 # Viewset for Store: Restricted to authenticated users
-class StoreListCreateView(generics.ListCreateAPIView):
+class StoreListView(generics.ListAPIView):
+    """
+    Handles fetching the list of store items.
+    """
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+class StoreCreateView(generics.CreateAPIView):
+    """
+    Handles creating new store items.
+    """
+    queryset = Store.objects.all()
+    serializer_class = StoreSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def perform_create(self, serializer):
+        # Add custom logic before saving
+        serializer.save()
+
     
 class StoreDeleteItem(generics.DestroyAPIView):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
+    lookup_field = 'itme_id'
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def delete(self, request, pk, *args, **kwargs):
+        try:
+            product = Store.objects.get(pk=pk)
+            product.delete()
+            return Response({"message": "Item deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        except Store.DoesNotExist:
+            return Response({"error": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def perform_destroy(self, instance):
+        # Delete the associated image from Cloudinary
+        if instance.item_img:
+            public_id = instance.item_img.public_id
+            destroy(public_id)
+
+        # Delete the item from the database
+        instance.delete()
 
 class StoreUpdateItem(generics.UpdateAPIView):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
     lookup_field = 'item_id'  # This is the default; it's used to identify the object via `id` in the URL
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def perform_update(self, serializer):
-        # Here you can add custom logic if needed before saving
-        serializer.save()
+        instance = self.get_object()
+        new_image = self.request.FILES.get('item_img')
+
+        # Delete old image if a new one is uploaded
+        if new_image and instance.item_img:
+            public_id = instance.item_img.public_id
+            destroy(public_id)
+
+        serializer.save(item_img=new_image if new_image else instance.item_img)
 
 # Viewset for Event: Restricted to authenticated users
 class EventViewSet(viewsets.ModelViewSet):
