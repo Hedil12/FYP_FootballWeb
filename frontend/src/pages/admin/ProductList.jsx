@@ -104,7 +104,7 @@ const ProductList = () => {
       if (editingItemId) {
         // Update the item
         console.log("Sending PUT request to update item with ID:", editingItemId);
-        const response = await api.put(`api/products/${editingItemId}/`, formDataObj, { headers });
+        const response = await api.put(`api/products/edit/${editingItemId}/`, formDataObj, { headers });
         console.log("Updated item response:", response.data);
       } else {
         // Create a new item
@@ -125,7 +125,7 @@ const ProductList = () => {
     console.log("Attempting to delete item with ID:", itemId); // Debugging log
     if (window.confirm("Are you sure you want to delete this item?")) {
       try {
-        const response = await api.delete(`api/products/${itemId}/`, {
+        const response = await api.delete(`api/products/delete/${itemId}/`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
           },
@@ -216,15 +216,18 @@ const ProductList = () => {
           onChange={handleImageChange}
           required={!editingItemId || formData.item_image === null}
         />
+        
         <button type="submit">
           {editingItemId ? "Update Item" : "Create Item"}
         </button>
         {editingItemId && <button onClick={resetForm}>Cancel</button>}
       </form>
+
       {loading && <LoadingIndicator />}
+
       <div className="product-grid">
         {storeItems.map((item) => (
-          <div key={item.id+item.item_name} className="product-card">
+          <div key={item.item_id+item.item_name} className="product-card">
             <img
               src={item.item_img ? `https://res.cloudinary.com/dzieqk9ly/${item.item_img}` : "https://res.cloudinary.com/dzieqk9ly/image/upload/v1736636312/No_Image_Available_pt1pcr.jpg"}
               alt={item.item_name || "No Name"}
@@ -240,7 +243,7 @@ const ProductList = () => {
               Availability: {item.is_available ? "Available" : "Not Available"}
             </p>
             <button onClick={() => handleEdit(item)}>Edit</button>
-            <button onClick={() => handleDelete(item.id)}>Delete</button>
+            <button onClick={() => handleDelete(item.item_id)}>Delete</button>
           </div>
         ))}
       </div>

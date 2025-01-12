@@ -3,6 +3,7 @@ import { Link, Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ProductList from "../pages/admin/ProductList";
+import EventList from "../pages/admin/EventList";
 import { UserInfo } from "../constants";
 import "../styles/StaffDashboard.css";
 
@@ -36,6 +37,9 @@ function StaffDashboard() {
             <Link to="manage-stores">Manage Stores</Link>
           </li>
           <li>
+            <Link to="manage-events">Manage Events</Link>
+          </li>
+          <li>
             <Link to="logout">Log Out</Link>
           </li>
         </ul>
@@ -46,6 +50,7 @@ function StaffDashboard() {
         <Routes>
           <Route path="register-user" element={<RegisterUsers />} />
           <Route path="manage-stores" element={<ProductList />} />
+          <Route path="manage-events" element={<EventList />} />
           <Route path="login" element={<Login />} />
           <Route path="logout" element={<LogOut />} />
         </Routes>

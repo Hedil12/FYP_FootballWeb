@@ -63,9 +63,9 @@ class StoreSerializer(serializers.ModelSerializer):
     item_img = CloudinaryFileField()
     class Meta:
         model = Store
-        fields = ['item_name', 'item_desc', 'item_qty', 
-                       'item_price', 'discount_rates',
-                       'is_available', 'item_img']
+        fields = ['item_id','item_name', 'item_desc', 
+                  'item_qty', 'item_price', 'discount_rates',
+                'is_available', 'item_img']
 
 
     def create(self, validated_data):

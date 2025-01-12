@@ -65,6 +65,11 @@ class StoreListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
+    def get(self, request):
+        products = Store.objects.all()
+        serializer = StoreSerializer(products, many=True)
+        return Response(serializer.data)
+
 class StoreCreateView(generics.CreateAPIView):
     """
     Handles creating new store items.
@@ -83,18 +88,10 @@ class StoreCreateView(generics.CreateAPIView):
 class StoreDeleteItem(generics.DestroyAPIView):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
-    lookup_field = 'itme_id'
+    lookup_field = 'item_id'
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
-
-    def delete(self, request, pk, *args, **kwargs):
-        try:
-            product = Store.objects.get(pk=pk)
-            product.delete()
-            return Response({"message": "Item deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-        except Store.DoesNotExist:
-            return Response({"error": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
 
     def perform_destroy(self, instance):
         # Delete the associated image from Cloudinary
@@ -113,8 +110,9 @@ class StoreUpdateItem(generics.UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
-    def perform_update(self, serializer):
+    def perform_update(self, instance, request):
         instance = self.get_object()
+        serializer = self.get_serializer(instance,data=request.data,partial=True)
         new_image = self.request.FILES.get('item_img')
 
         # Delete old image if a new one is uploaded
@@ -125,22 +123,33 @@ class StoreUpdateItem(generics.UpdateAPIView):
         serializer.save(item_img=new_image if new_image else instance.item_img)
 
 # Viewset for Event: Restricted to authenticated users
-class EventViewSet(viewsets.ModelViewSet):
+class EventViewSet(generics.ListAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
 
-    # Filter events by activity status or search by name
-    def get_queryset(self):
-        queryset = Event.objects.all()
-        is_active = self.request.query_params.get('is_active', None)
-        if is_active:
-            queryset = queryset.filter(is_active=(is_active.lower() == 'true'))
-        event_name = self.request.query_params.get('event_name', None)
-        if event_name:
-            queryset = queryset.filter(event_name__icontains=event_name)
-        return queryset
+class EventCreateView(generics.CreateAPIView):
+    """
+    Handles creating new store items.
+    """
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
 
+
+class EventUpdateView(generics.UpdateAPIView):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+class EventDeleteView(generics.DestroyAPIView):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
 
 # Read-only viewset for Membership: Restricted to authenticated users
 class MembershipViewSet(viewsets.ReadOnlyModelViewSet):
