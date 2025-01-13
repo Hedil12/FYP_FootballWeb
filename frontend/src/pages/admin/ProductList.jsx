@@ -66,18 +66,19 @@ const ProductList = () => {
 
   const handleEdit = (item) => {
     setFormData({
-      item_name: item.item_name,
-      item_desc: item.item_desc,
-      item_qty: item.item_qty,
-      item_price: item.item_price,
-      discount_rates: item.discount_rates || 0,
-      has_discounts: item.has_discounts,
-      is_available: item.is_available,
-      item_image: null, // Reset the image input for editing
+        item_name: item.item_name,
+        item_desc: item.item_desc,
+        item_qty: item.item_qty,
+        item_price: item.item_price,
+        discount_rates: item.discount_rates || 0,
+        has_discounts: item.has_discounts,
+        is_available: item.is_available,
+        item_image: item.item_img, // Do not prefill the image input
     });
-    console.log("Editing item with ID:", item.id); // Debugging log
-    setEditingItemId(item.id); // Set the editing item ID
-  };
+    console.log("Editing item with ID:", item.item_id); // Debugging log
+    setEditingItemId(item.item_id); // Ensure correct ID is set
+};
+
   
   const handleCreateOrUpdate = async (e) => {
     e.preventDefault();
@@ -102,6 +103,7 @@ const ProductList = () => {
       };
   
       if (editingItemId) {
+        console.log("item ID:",editingItemId.item_id)
         // Update the item
         console.log("Sending PUT request to update item with ID:", editingItemId);
         const response = await api.put(`api/products/edit/${editingItemId}/`, formDataObj, { headers });

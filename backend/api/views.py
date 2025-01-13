@@ -110,16 +110,15 @@ class StoreUpdateItem(generics.UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
-    def perform_update(self, instance, request):
+    def perform_update(self, serializer):
         instance = self.get_object()
-        serializer = self.get_serializer(instance,data=request.data,partial=True)
         new_image = self.request.FILES.get('item_img')
 
         # Delete old image if a new one is uploaded
         if new_image and instance.item_img:
             public_id = instance.item_img.public_id
             destroy(public_id)
-
+        
         serializer.save(item_img=new_image if new_image else instance.item_img)
 
 # Viewset for Event: Restricted to authenticated users
@@ -128,6 +127,7 @@ class EventViewSet(generics.ListAPIView):
     serializer_class = EventSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
 class EventCreateView(generics.CreateAPIView):
     """
@@ -137,6 +137,11 @@ class EventCreateView(generics.CreateAPIView):
     serializer_class = EventSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def perform_create(self, serializer):
+        # Add custom logic before saving
+        serializer.save()
 
 
 class EventUpdateView(generics.UpdateAPIView):
@@ -144,12 +149,25 @@ class EventUpdateView(generics.UpdateAPIView):
     serializer_class = EventSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def perform_update(self, instance, request):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance,data=request.data,partial=True)
+        if serializer.is_valid():
+            self.perform_update(serializer)
+        serializer.save(serializer.data)
 
 class EventDeleteView(generics.DestroyAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def perform_destroy(self, instance):
+        # Delete the item from the database
+        instance.delete()
 
 # Read-only viewset for Membership: Restricted to authenticated users
 class MembershipViewSet(viewsets.ReadOnlyModelViewSet):
@@ -157,7 +175,7 @@ class MembershipViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = MembershipSerializer
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, format=None):
+    def get(self, request):
         """
         Return a list of all membership information.
         """
