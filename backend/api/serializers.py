@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Membership, Role, Member, Store, Cart, Event, MemberEvent
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from cloudinary.forms import CloudinaryFileField
 
 class CustomTokenRefreshSerializer(TokenRefreshSerializer):
     def validate(self, attrs):
@@ -59,15 +60,19 @@ class MemberSerializer(serializers.ModelSerializer):
         return member
 
 class StoreSerializer(serializers.ModelSerializer):
+    item_img = CloudinaryFileField()
     class Meta:
         model = Store
-        fields = ['item_name', 'item_desc', 'item_qty', 'item_price', 'discount_rates']
+        fields = ['item_id','item_name', 'item_desc', 
+                  'item_qty', 'item_price', 'discount_rates',
+                'is_available', 'item_img']
+
 
     def create(self, validated_data):
         # You can add custom logic here if needed before saving
         store = Store.objects.create(**validated_data)
         return store
-
+    
 class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart

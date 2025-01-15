@@ -1,0 +1,36 @@
+/* Container for the entire list */
+.event-list-container {
+    padding: 20px;
+    text-align: center;
+  }
+
+.event-list-container h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #333;
+  }
+
+.error-message {
+    color: red;
+    text-align: center;
+  }
+  
+.event-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+
+button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+button:hover {
+    background-color: #0056b3;
+  }

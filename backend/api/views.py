@@ -1,11 +1,12 @@
-from rest_framework import generics, viewsets, status
+from rest_framework import generics, viewsets, permissions, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Member, Store, Event, Membership
-from .serializers import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.views import APIView, Response
-from rest_framework import permissions
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from .models import Member, Store, Event, Membership
+from .serializers import *
+from cloudinary.uploader import destroy, upload
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -54,44 +55,119 @@ class MemberProfileView(APIView):
         return Response(serializer.data, status=200)
 
 # Viewset for Store: Restricted to authenticated users
-class StoreListCreateView(generics.ListCreateAPIView):
+class StoreListView(generics.ListAPIView):
+    """
+    Handles fetching the list of store items.
+    """
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request):
+        products = Store.objects.all()
+        serializer = StoreSerializer(products, many=True)
+        return Response(serializer.data)
+
+class StoreCreateView(generics.CreateAPIView):
+    """
+    Handles creating new store items.
+    """
+    queryset = Store.objects.all()
+    serializer_class = StoreSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def perform_create(self, serializer):
+        # Add custom logic before saving
+        serializer.save()
+
     
 class StoreDeleteItem(generics.DestroyAPIView):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
+    lookup_field = 'item_id'
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def perform_destroy(self, instance):
+        # Delete the associated image from Cloudinary
+        if instance.item_img:
+            public_id = instance.item_img.public_id
+            destroy(public_id)
+
+        # Delete the item from the database
+        instance.delete()
 
 class StoreUpdateItem(generics.UpdateAPIView):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
     lookup_field = 'item_id'  # This is the default; it's used to identify the object via `id` in the URL
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def perform_update(self, serializer):
-        # Here you can add custom logic if needed before saving
-        serializer.save()
+        instance = self.get_object()
+        new_image = self.request.FILES.get('item_img')
+
+        # Delete old image if a new one is uploaded
+        if new_image and instance.item_img:
+            public_id = instance.item_img.public_id
+            destroy(public_id)
+        
+        serializer.save(item_img=new_image if new_image else instance.item_img)
 
 # Viewset for Event: Restricted to authenticated users
-class EventViewSet(viewsets.ModelViewSet):
+class EventViewSet(generics.ListAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
-    # Filter events by activity status or search by name
-    def get_queryset(self):
-        queryset = Event.objects.all()
-        is_active = self.request.query_params.get('is_active', None)
-        if is_active:
-            queryset = queryset.filter(is_active=(is_active.lower() == 'true'))
-        event_name = self.request.query_params.get('event_name', None)
-        if event_name:
-            queryset = queryset.filter(event_name__icontains=event_name)
-        return queryset
+class EventCreateView(generics.CreateAPIView):
+    """
+    Handles creating new store items.
+    """
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
+    def perform_create(self, serializer):
+        # Add custom logic before saving
+        serializer.save()
+
+
+class EventUpdateView(generics.UpdateAPIView):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def perform_update(self, instance, request):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance,data=request.data,partial=True)
+        if serializer.is_valid():
+            self.perform_update(serializer)
+        serializer.save(serializer.data)
+
+class EventDeleteView(generics.DestroyAPIView):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def perform_destroy(self, instance):
+        # Delete the item from the database
+        instance.delete()
 
 # Read-only viewset for Membership: Restricted to authenticated users
 class MembershipViewSet(viewsets.ReadOnlyModelViewSet):
@@ -99,7 +175,7 @@ class MembershipViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = MembershipSerializer
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, format=None):
+    def get(self, request):
         """
         Return a list of all membership information.
         """

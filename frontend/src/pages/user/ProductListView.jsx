@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api";
 import { ACCESS_TOKEN } from "../../constants";
-import '../../styles/ProductList.css'; // For styling consistency
+import "../../styles/ProductList.css";
 
 const ProductListView = () => {
   const [storeItems, setStoreItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState(null);
 
-  // Fetch items from the API
   useEffect(() => {
     fetchStoreItems();
   }, []);
@@ -17,13 +18,25 @@ const ProductListView = () => {
       const response = await api.get("api/products/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
-          'Content-type': 'application/json',
+          "Content-Type": "multipart/form-data",
         },
       });
       setStoreItems(response.data);
+      setFilteredItems(response.data);
     } catch (err) {
-      setError(err.message);
+      console.error("Error fetching products:", err);
+      setError("Failed to fetch products. Please try again.");
     }
+  };
+
+  const handleSearch = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+    setFilteredItems(
+      storeItems.filter((item) =>
+        item.item_name.toLowerCase().includes(query)
+      )
+    );
   };
 
   return (
@@ -31,24 +44,27 @@ const ProductListView = () => {
       <h1>Available Products</h1>
       {error && <p className="error-message">{error}</p>}
 
-      <div className="product-list">
-        {storeItems.length > 0 ? (
-          <ul>
-            {storeItems.map((item) => (
-              <li key={item.item_id} className="product-item">
-                <div className="product-details">
-                  <h3>{item.item_name}</h3>
-                  <p>{item.item_desc}</p>
-                  <p><strong>Price:</strong> ${item.item_price}</p>
-                  <p><strong>Available Quantity:</strong> {item.item_qty}</p>
-                  <p><strong>Discount:</strong> {item.discount_rates}%</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No products available at the moment. Please check back later!</p>
-        )}
+      <input
+        type="text"
+        placeholder="Search products..."
+        value={searchQuery}
+        onChange={handleSearch}
+      />
+
+      <div className="product-grid">
+        {filteredItems.map((item) => (
+          <div key={item.item_id} className="product-card">
+            <img
+              src={item.item_img ? `https://res.cloudinary.com/dzieqk9ly/${item.item_img}` : "https://res.cloudinary.com/dzieqk9ly/image/upload/v1736636312/No_Image_Available_pt1pcr.jpg"}
+              alt={item.item_name || "No Name"}
+            />
+            <h3>{item.item_name}</h3>
+            <p>{item.item_desc}</p>
+            <p>${item.item_price}</p>
+            <p>Quantity: {item.item_qty}</p>
+            <p>Discount: {item.discount_rates}%</p>
+          </div>
+        ))}
       </div>
     </div>
   );
