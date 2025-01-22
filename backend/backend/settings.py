@@ -174,6 +174,7 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGINGS_ALLOW_ALL = True
 
 STATIC_ROOT = 'static'
+# For Cloud Image
 API_KEY = os.getenv("API_KEY")
 API_SECRET = os.getenv("API_SECRET")
 CLOUD_NAME = os.getenv("CLOUD_NAME")
