@@ -121,6 +121,23 @@ class StoreUpdateItem(generics.UpdateAPIView):
         
         serializer.save(item_img=new_image if new_image else instance.item_img)
 
+class StoreRetrieveItem(generics.RetrieveAPIView):
+        queryset = Store.objects.all()
+        serializer_class = StoreSerializer
+        lookup_field = 'item_id'
+        authentication_classes = [JWTAuthentication]
+        permission_classes = [permissions.IsAuthenticated]
+        parser_classes = [MultiPartParser, FormParser]
+
+        def get(self, request, *args, **kwargs):
+            # Retrieve the object using the default mechanism
+            product = self.get_object()
+
+            # Perform any custom logic, e.g., adding metadata
+            serializer = self.get_serializer(product)
+            data = serializer.data
+            return Response(data)
+
 # Viewset for Event: Restricted to authenticated users
 class EventViewSet(generics.ListAPIView):
     queryset = Event.objects.all()
@@ -128,6 +145,28 @@ class EventViewSet(generics.ListAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request):
+        events = Event.objects.all()
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data)
+
+class EventRetrieveView(generics.RetrieveAPIView):
+        queryset = Event.objects.all()
+        serializer_class = EventSerializer
+        lookup_field = 'event_id'
+        authentication_classes = [JWTAuthentication]
+        permission_classes = [permissions.IsAuthenticated]
+        parser_classes = [MultiPartParser, FormParser]
+
+        def get(self, request, *args, **kwargs):
+            # Retrieve the object using the default mechanism
+            event = self.get_object()
+
+            # Perform any custom logic, e.g., adding metadata
+            serializer = self.get_serializer(event)
+            data = serializer.data
+            return Response(data)
 
 class EventCreateView(generics.CreateAPIView):
     """
@@ -137,35 +176,42 @@ class EventCreateView(generics.CreateAPIView):
     serializer_class = EventSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer):
         # Add custom logic before saving
         serializer.save()
 
-
 class EventUpdateView(generics.UpdateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+    lookup_field = 'event_id'
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
 
-    def perform_update(self, instance, request):
+    def perform_update(self, serializer):
         instance = self.get_object()
-        serializer = self.get_serializer(instance,data=request.data,partial=True)
-        if serializer.is_valid():
-            self.perform_update(serializer)
-        serializer.save(serializer.data)
+        new_image = self.request.FILES.get('event_img')
+
+        # Delete old image if a new one is uploaded
+        if new_image and instance.event_img:
+            public_id = instance.event_img.public_id
+            destroy(public_id)
+        
+        serializer.save(event_img=new_image if new_image else instance.event_img)
 
 class EventDeleteView(generics.DestroyAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+    lookup_field = 'event_id'
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
 
     def perform_destroy(self, instance):
+        # Delete the associated image from Cloudinary
+        if instance.event_img:
+            public_id = instance.event_img.public_id
+            destroy(public_id)
+
         # Delete the item from the database
         instance.delete()
 

@@ -1,8 +1,10 @@
 import { Routes, Route, Link, Navigate } from "react-router-dom";
 import Profile from "../pages/user/Profile";
-import MembershipProgram from "../pages/admin/MembershipProgram";
+import MembershipProgram from "../pages/user/MembershipProgram";
 import EventListView from "../pages/user/EventListView";
 import ProductListView from "../pages/user/ProductListView";
+import ProductDetails from "../pages/user/ProductDetails";
+import EventDetails from "../pages/user/EventDetails";
 import "../styles/UserDashboard.css";
 import { UserInfo } from "../constants";
 
@@ -55,11 +57,13 @@ function DashboardUser() {
               </div>
             }
           />
-          <Route path="profile" element={<Profile />} />
+          <Route path="profile" element={<Profile/>} />
           <Route path="membership" element={<MembershipProgram />} />
           <Route path="events" element={<EventListView />} />
           <Route path="store" element={<ProductListView/>}/>
-          <Route path="logout" element={<LogOut />} />
+          <Route path="schedule/:event_Id" element={<EventDetails/>} />
+          <Route path="store/products/:item_Id" element={<ProductDetails/>} />
+          <Route path="logout" element={<LogOut/>} />
         </Routes>
       </div>
     </div>

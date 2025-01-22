@@ -103,7 +103,6 @@ const ProductList = () => {
       };
   
       if (editingItemId) {
-        console.log("item ID:",editingItemId.item_id)
         // Update the item
         console.log("Sending PUT request to update item with ID:", editingItemId);
         const response = await api.put(`api/products/edit/${editingItemId}/`, formDataObj, { headers });
@@ -218,6 +217,7 @@ const ProductList = () => {
           onChange={handleImageChange}
           required={!editingItemId || formData.item_image === null}
         />
+        
         
         <button type="submit">
           {editingItemId ? "Update Item" : "Create Item"}

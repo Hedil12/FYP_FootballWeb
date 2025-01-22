@@ -11,12 +11,18 @@ urlpatterns = [
     path('events/', EventViewSet.as_view(), name='event-list'),
 
     #Viewed for Admins
+    #Products
     path('products/create/', StoreCreateView.as_view(), name='store-create'),
     path('products/delete/<int:item_id>/', StoreDeleteItem.as_view(), name='store-delete'),
     path('products/edit/<int:item_id>/', StoreUpdateItem.as_view(), name='store-update'),
+    path('products/retrieve/<int:item_id>/', StoreRetrieveItem.as_view(), name='store-retrieval'),
+    #Carts
+    
+    #Event
     path('events/create/', EventCreateView.as_view(), name='event-list'),
     path('events/delete/<int:event_id>/', EventDeleteView.as_view(), name='event-list'),
     path('events/edit/<int:event_id>/', EventUpdateView.as_view(), name='event-list'),
+    path('events/retrieve/<int:event_id>/', EventRetrieveView.as_view(), name='event-retrieval')
 ]
 
 if settings.DEBUG:

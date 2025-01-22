@@ -6,6 +6,7 @@ import ProductList from "../pages/admin/ProductList";
 import EventList from "../pages/admin/EventList";
 import { UserInfo } from "../constants";
 import "../styles/StaffDashboard.css";
+import ProductDetails from "../pages/user/ProductDetails";
 
 
 function LogOut() {

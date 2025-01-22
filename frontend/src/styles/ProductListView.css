@@ -10,15 +10,18 @@
   color: #333;
 }
 
+/* Grid Layout */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjust card size and responsiveness */
+  gap: 20px; /* Spacing between cards */
   justify-content: center;
   padding: 10px;
 }
 
+/* Card Styling */
 .product-card {
+  position: relative; /* For positioning discount labels */
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 10px;
@@ -26,7 +29,10 @@
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
-  padding: 15px;
+  padding: 20px; /* More padding for a larger card appearance */
+  display: flex;
+  flex-direction: column; /* Ensures content stacks */
+  align-items: center;    /* Center aligns content */
 }
 
 .product-card:hover {
@@ -34,23 +40,51 @@
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-.product-details {
-  text-align: left;
+.discount-card {
+  border: 2px solid red; /* This ensures the red border is always visible for discount items */
 }
 
-.product-details h3 {
-  font-size: 1.5em;
+.product-card img {
+  width: 100%; /* Ensure image fits card width */
+  max-height: 200px; /* Set a larger max height */
+  object-fit: cover; /* Crops image to fit dimensions */
+  border-radius: 8px;
+  margin-bottom: 15px; /* Spacing between image and other content */
+}
+
+.product-card h3 {
+  font-size: 1.2em; /* Larger text for titles */
   color: #333;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  text-align: center;
+  white-space: nowrap; /* Prevents text wrapping */
+  overflow: hidden; /* Hides overflow text */
+  text-overflow: ellipsis; /* Adds ellipsis for overflow text */
 }
 
-.product-details p {
-  margin: 5px 0;
+.product-card p {
+  font-size: 1em; /* Slightly larger text for price */
   color: #666;
+  margin: 0px 0 10px; /* Margin below the price */
+  text-align: center;
 }
 
-.error-message {
-  color: red;
+/* Discount Label */
+.discount-label {
+  position: absolute; /* Stays positioned relative to .product-card */
+  top: 10px; /* Distance from the top edge */
+  right: 10px; /* Distance from the right edge */
+  background-color: red; /* Red background for the discount label */
+  color: white; /* White text color for contrast */
+  font-size: 14px;
   font-weight: bold;
-  margin-top: 10px;
+  padding: 4px 8px;
+  border-radius: 3px;
+  z-index: 10;
+}
+
+/* Hover Effect */
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
