@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Membership, Role, Member, Store, Cart, Event, MemberEvent
+from .models import *
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from cloudinary.forms import CloudinaryFileField
@@ -73,24 +73,35 @@ class StoreSerializer(serializers.ModelSerializer):
         store = Store.objects.create(**validated_data)
         return store
     
+class CartItemSerializer(serializers.ModelSerializer):
+    item = StoreSerializer()  # Nest the Store serializer to include item details
+
+    class Meta:
+        model = CartItem
+        fields = ['id', 'item', 'qty']
+
+
 class CartSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(many=True)  # Include cart items with detailed info
+
     class Meta:
         model = Cart
-        fields = '__all__'
+        fields = ['user', 'items']
 
-    def create(self, validated_data):
-        member_data = validated_data.pop('member')
-        item_data = validated_data.pop('item')
-        member = Member.objects.get(**member_data)  # Adjust as necessary
-        item = Store.objects.get(**item_data)  # Adjust as necessary
-        cart = Cart(member=member, item=item, **validated_data)
-        cart.save()
-        return cart
+    def calculate_total(self):
+        # Add a total price field to the serializer for easier response formatting
+        total_price = sum(
+            item['item']['item_price'] * item['qty'] 
+            for item in self.data['items']
+        )
+        return total_price
+
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = '__all__'
+        
 
     def validate(self, data):
         # Validate dates

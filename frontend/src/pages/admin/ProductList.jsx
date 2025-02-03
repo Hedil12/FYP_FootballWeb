@@ -13,13 +13,14 @@ const ProductList = () => {
     item_price: "",
     discount_rates: 0,
     has_discounts: false,
-    is_available: false, // New state for availability
+    is_available: true, // New state for availability
     item_image: null, // To handle the image file
   });
   const [editingItemId, setEditingItemId] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false)
 
+  
   useEffect(() => {
     fetchStoreItems();
   }, []);
@@ -149,7 +150,7 @@ const ProductList = () => {
       item_price: "",
       discount_rates: 0,
       has_discounts: false,
-      is_available: false, // Reset availability
+      is_available: true, // Reset availability
       item_image: null,
     });
     setEditingItemId(null);

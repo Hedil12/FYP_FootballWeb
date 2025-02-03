@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import api from "../../api";
 import { ACCESS_TOKEN } from '../../constants';
+import NotFound from '../NotFound';
 
-const membershipProgram = () => {
+const MembershipProgram = () => {
   const [memberships, setMemberships] = useState([]);
   const [error, setError] = useState(null);
 
@@ -24,23 +25,25 @@ const membershipProgram = () => {
   }, []);
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <NotFound/>;
   }
 
   return (
     <div>
       <h1>Memberships</h1>
       <ul>
-        {memberships.map((membership) => (
-          <li key={!membership.tier>3}>
-            <h2>{membership.membership_name}</h2>
-            <p>{membership.cashback_rates * 100}%</p>
-            <p>Discount Rates: ${membership.discount_rates*100}</p>
-          </li>
-        ))}
+        {memberships
+          .filter(membership => membership.membership_tier !== 4) // Exclude membership with id 4
+          .map((membership) => (
+            <li key={membership.membership_tier+membership.membership_name}>
+              <h2>{membership.membership_name}</h2>
+              <p>Cashback Rates: {(membership.cashback_rates * 100).toFixed(2)}%</p>
+              <p>Discount Rates: {(membership.discount_rates * 100).toFixed(2)}%</p>
+            </li>
+          ))}
       </ul>
     </div>
   );
 };
 
-export default membershipProgram;
+export default MembershipProgram;

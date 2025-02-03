@@ -1,45 +1,38 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import api from "../../api";
-import { ACCESS_TOKEN } from "../../constants";
+import { ACCESS_TOKEN, noImgURL } from "../../constants";
 import "../../styles/ProductDetails.css";
 import LoadingIndicator from "../../components/LoadingIndicator";
+import NotFound from "../NotFound";
 
 const ProductDetails = () => {
-    const { item_Id } = useParams(); // To retireve the URL/path
+    const { item_Id } = useParams();
     const [product, setProduct] = useState(null);
     const [relatedProducts, setRelatedProducts] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [showCount, setShowCount] = useState(4); // Initial count of related products
+    const [showCount, setShowCount] = useState(4);
+    const [quantity, setQuantity] = useState(1);
     const navigate = useNavigate();
 
-    console.log("path: ", useParams());
-    console.log("item id: ", item_Id);
     useEffect(() => {
         if (item_Id) {
-            fetchProductDetails(item_Id);
+            fetchProductDetails();
             fetchRelatedProducts();
-            setShowCount(4); // Reset the showCount when the item_Id changes
-        } else {
-            console.log("No item_id");
         }
-    }, [item_Id]); // Ensure the effect reruns when `item_Id` changes
+    }, [item_Id]);
 
-    const fetchProductDetails = async (item_Id) => {
+    const fetchProductDetails = async () => {
         setLoading(true);
         try {
             const response = await api.get(`/api/products/retrieve/${item_Id}/`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
-                    "Content-Type": "multipart/form-data",
-                },
+                headers: { Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}` },
             });
-            console.log("Item retrieved: ", response)
             setProduct(response.data);
         } catch (err) {
             console.error("Error fetching product details:", err);
-            setError("Failed to load product details. Please try again later.");
+            setError("Failed to load product details.");
         } finally {
             setLoading(false);
         }
@@ -48,52 +41,63 @@ const ProductDetails = () => {
     const fetchRelatedProducts = async () => {
         try {
             const response = await api.get(`/api/products/`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
-                },
+                headers: { Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}` },
             });
-            const filteredRelatedProducts = response.data.filter(
-                (product) => product.item_id !== parseInt(item_Id)
-            );
-            
-            setRelatedProducts(filteredRelatedProducts);
+            const filteredProducts = response.data.filter((p) => p.item_id !== parseInt(item_Id));
+            setRelatedProducts(filteredProducts);
         } catch (err) {
             console.error("Error fetching related products:", err);
-            setError("Failed to load related products.");
         }
     };
 
-    const handleAddToCart = () => {
-        console.log("Added to cart:", product.item_id);
+    const handleAddToCart = async () => {
+        if (quantity <= 0 || quantity > product.item_qty) {
+            alert("Invalid quantity. Please select a valid number.");
+            return;
+        }
+
+        try {
+            await api.post(`api/cart/add/${item_Id}/`, { quantity }, {
+                headers: { Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}` },
+            });
+            alert(`${product.item_name} added to cart!`);
+        } catch (error) {
+            console.error("Error adding to cart:", error);
+        }
     };
 
-    const handleBuyNow = () => {
-        console.log("Buying now:", product.item_id);
+    const handleBuyNow = async () => {
+        try {
+            await api.post(`api/cart/buy-now/${item_Id}/`, { quantity: 1 }, {
+                headers: { Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}` },
+            });
+            navigate("/user-Dashboard/store/view-cart");  // Redirect to cart
+        } catch (error) {
+            console.error("Error buying item:", error);
+        }
     };
 
-    const handleShowMore = () => {
-        setShowCount((prevCount) => prevCount + 4); // Increment by 4
-    };
+    if (!product) return <p>No item available</p>;
+    if (error) return <NotFound/>
 
-    if (!product) return <p>No item available</p>
-
-   return (
+    return (
         <div className="product-details-container">
             {error && <p className="error-message">{error}</p>}
-            {loading && <LoadingIndicator/>}
+            {loading && <LoadingIndicator />}
+            
             <div className="product-details-wrapper">
+                {/* Product Image */}
                 <div className="product-image">
                     <img
-                        src={
-                            product.item_img
-                                ? `https://res.cloudinary.com/dzieqk9ly/${product.item_img}`
-                                : "https://res.cloudinary.com/dzieqk9ly/image/upload/v1736636312/No_Image_Available_pt1pcr.jpg"
-                        }
-                        alt={product.item_name || "No Name"}
+                        src={product.item_img
+                            ? `https://res.cloudinary.com/dzieqk9ly/${product.item_img}`
+                            : noImgURL}
+                        alt={product.item_name}
                         className="product-details-image"
                     />
                 </div>
 
+                {/* Product Info */}
                 <div className="product-info">
                     <h1 className="product-title">{product.item_name}</h1>
                     <p className="product-price">${product.item_price}</p>
@@ -101,22 +105,26 @@ const ProductDetails = () => {
                     {product.discount_rates > 0 && (
                         <div className="discount-container">
                             <span className="discount-label">Discount</span>
-                            <span className="discount-amount">
-                                {product.discount_rates}%
-                            </span>
+                            <span className="discount-amount">{product.discount_rates}%</span>
                         </div>
                     )}
 
                     <p className="product-description">
-                        <strong>Description: </strong>
-                        {product.item_desc}
+                        <strong>Description: </strong>{product.item_desc}
                     </p>
 
                     <p className="product-availability">
-                        <strong>Availability: </strong>
-                        {product.is_available ? "Available" : "Not Available"}
+                        <strong>Availability: </strong>{product.is_available ? "Available" : "Out of Stock"}
                     </p>
 
+                    {/* Quantity Selector */}
+                    <div className="quantity-container">
+                        <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
+                        <span>{quantity}</span>
+                        <button onClick={() => setQuantity(Math.min(product.item_qty, quantity + 1))}>+</button>
+                    </div>
+
+                    {/* Action Buttons */}
                     <div className="action-buttons">
                         <button className="btn add-to-cart" onClick={handleAddToCart}>
                             Add to Cart
@@ -128,32 +136,28 @@ const ProductDetails = () => {
                 </div>
             </div>
 
-            {loading && <LoadingIndicator/>}
-
             {/* Related Products */}
             <div className="related-products-container">
                 <h2>Related Products</h2>
                 <div className="related-products-grid">
-                    {relatedProducts.slice(0, showCount).map((product) => (
-                        <div className="related-product-item" key={product.item_id}>
-                            <Link to={`/user-Dashboard/store/products/${product.item_id}`}>
+                    {relatedProducts.slice(0, showCount).map((p) => (
+                        <div className="related-product-item" key={p.item_id}>
+                            <Link to={`/user-Dashboard/store/products/${p.item_id}`}>
                                 <img
-                                    src={
-                                        product.item_img
-                                          ? `https://res.cloudinary.com/dzieqk9ly/${product.item_img}`
-                                          : "https://res.cloudinary.com/dzieqk9ly/image/upload/v1736636312/No_Image_Available_pt1pcr.jpg"
-                                      }
-                                    alt={product.item_name}
+                                    src={p.item_img
+                                        ? `https://res.cloudinary.com/dzieqk9ly/${p.item_img}`
+                                        : noImgURL}
+                                    alt={p.item_name}
                                     className="related-product-image"
                                 />
-                                <h3 className="related-product-title">{product.item_name}</h3>
-                                <p className="related-product-price">${product.item_price}</p>
+                                <h3 className="related-product-title">{p.item_name}</h3>
+                                <p className="related-product-price">${p.item_price}</p>
                             </Link>
                         </div>
                     ))}
                 </div>
                 {showCount < relatedProducts.length && (
-                    <button className="btn show-more" onClick={handleShowMore}>
+                    <button className="btn show-more" onClick={() => setShowCount(showCount + 4)}>
                         Show More
                     </button>
                 )}

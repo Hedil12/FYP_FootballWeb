@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, viewsets, permissions, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -42,7 +43,6 @@ class CreateMemberView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     queryset = Member.objects.all()
 
-
 # View to retrieve and update the authenticated Member's profile
 class MemberProfileView(APIView):
     queryset = Member.objects.all()
@@ -53,6 +53,17 @@ class MemberProfileView(APIView):
         """Retrieve user profile."""
         serializer = MemberSerializer(request.user)  # Pass the user object
         return Response(serializer.data, status=200)
+
+class MembersListView(generics.ListAPIView):
+    queryset = Member.objects.all()
+    serializer_class = MemberSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        users = Member.objects.all()
+        serializer = MemberSerializer(users, many=True)
+        return Response(serializer.data)
 
 # Viewset for Store: Restricted to authenticated users
 class StoreListView(generics.ListAPIView):
@@ -84,7 +95,6 @@ class StoreCreateView(generics.CreateAPIView):
         # Add custom logic before saving
         serializer.save()
 
-    
 class StoreDeleteItem(generics.DestroyAPIView):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
@@ -215,17 +225,114 @@ class EventDeleteView(generics.DestroyAPIView):
         # Delete the item from the database
         instance.delete()
 
-# Read-only viewset for Membership: Restricted to authenticated users
+# Viewset for adding Items to Cart: Restricted to authenticated users
+class AddToCartView(APIView):
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]  # Only authenticated users can access this view
+
+    def post(self, request, product_id):
+        # Fetch the product to be added to the cart or raise a 404 if it doesn't exist
+        product = get_object_or_404(Store, item_id=product_id)
+        user = request.user  # Get the authenticated user
+        quantity = request.data.get('quantity', 1)  # Get the quantity from the request (default: 1)
+
+        # Retrieve or create the user's cart
+        cart, created = Cart.objects.get_or_create(user=user)
+
+        # Retrieve or create a CartItem for the specified product
+        cart_item, created = CartItem.objects.get_or_create(member=user, item=product)
+        if not created:
+            # If the cart item already exists, increment the quantity
+            cart_item.qty += int(quantity)
+        cart_item.save()  # Save the updated cart item
+
+        # Add the cart item to the user's cart
+        cart.items.add(cart_item)
+        return Response({
+            'message': 'Product added to cart',
+            'cart_item': {
+                'product': cart_item.item.item_name,
+                'quantity': cart_item.qty
+            }
+        }, status=status.HTTP_200_OK)
+
+
+class ViewCart(APIView):
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]  # Only authenticated users can access this view
+
+    def get(self, request):
+        user = request.user  # Get the authenticated user
+        cart = get_object_or_404(Cart, user=user)  # Fetch the user's cart or raise a 404
+
+        # Prepare the cart items for the response
+        cart_items = [
+            {
+                'product': {
+                    'name': item.item.item_name,
+                    'price': item.item.item_price,
+                    'image': item.item.item_img.url if item.item.item_img else None
+                },
+                'quantity': item.qty
+            }
+            for item in cart.items.all()
+        ]
+
+        return Response({
+            'cart_items': cart_items,
+            'total_price': cart.calculate_total()  # Include the total price of the cart
+        })
+
+
+class BuyNowView(APIView):
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]  # Only authenticated users can access this view
+
+    def post(self, request, product_id):
+        # Fetch the product to be purchased immediately or raise a 404 if it doesn't exist
+        product = get_object_or_404(Store, item_id=product_id)
+        quantity = request.data.get('quantity', 1)  # Get the quantity from the request (default: 1)
+
+        # Simulate buy-now logic (e.g., create an order, clear the cart, etc.)
+        return Response({
+            'message': 'Product purchased successfully',
+            'product': {
+                'name': product.item_name,
+                'quantity': quantity,
+                'price': product.item_price
+            }
+        }, status=status.HTTP_200_OK)
+        
+class RemoveFromCartView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, product_id):
+        user = request.user
+        cart = get_object_or_404(Cart, user=user)
+        cart_item = get_object_or_404(CartItem, member=user, item_id=product_id)
+
+        if cart_item.qty > 1:
+            cart_item.qty -= 1
+            cart_item.save()
+        else:
+            cart.items.remove(cart_item)
+            cart_item.delete()
+
+        return Response({'message': 'Item removed from cart'}, status=status.HTTP_200_OK)
+
 class MembershipViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Membership.objects.all()
     serializer_class = MembershipSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        """
-        Return a list of all membership information.
-        """
-        # Use the serializer to convert model instances to JSON-serializable data
         memberships = Membership.objects.all()
         serializer = MembershipSerializer(memberships, many=True)
         return Response(serializer.data)

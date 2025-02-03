@@ -9,8 +9,10 @@ urlpatterns = [
     path('products/', StoreListView.as_view(), name='store-list-retrieve'),
     path('membership/', MembershipViewSet.as_view({'get':'list'}), name='membership-list'),
     path('events/', EventViewSet.as_view(), name='event-list'),
+        path('cart/view/', ViewCart.as_view(), name='view_cart'),
 
     #Viewed for Admins
+    path('members/', MembersListView.as_view(), name='Member-list'),
     #Products
     path('products/create/', StoreCreateView.as_view(), name='store-create'),
     path('products/delete/<int:item_id>/', StoreDeleteItem.as_view(), name='store-delete'),
@@ -22,7 +24,12 @@ urlpatterns = [
     path('events/create/', EventCreateView.as_view(), name='event-list'),
     path('events/delete/<int:event_id>/', EventDeleteView.as_view(), name='event-list'),
     path('events/edit/<int:event_id>/', EventUpdateView.as_view(), name='event-list'),
-    path('events/retrieve/<int:event_id>/', EventRetrieveView.as_view(), name='event-retrieval')
+    path('events/retrieve/<int:event_id>/', EventRetrieveView.as_view(), name='event-retrieval'),
+
+    #Cart
+    path('cart/add/<int:product_id>/', AddToCartView.as_view(), name='add_to_cart'),
+    path('cart/buy-now/<int:product_id>/', BuyNowView.as_view(), name='buy_now'),
+    path('cart/delete/<int:product_id>/', RemoveFromCartView.as_view(), name='remove-from-cart')
 ]
 
 if settings.DEBUG:

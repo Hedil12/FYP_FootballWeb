@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api";
-import { ACCESS_TOKEN } from "../../constants";
+import { ACCESS_TOKEN, noImgURL } from "../../constants";;
 import "../../styles/ProductListView.css";
 import { Link } from "react-router-dom";
 import LoadingIndicator from "../../components/LoadingIndicator";
+import NotFound from "../NotFound";
 
 const ProductListView = () => {
   const [storeItems, setStoreItems] = useState([]);
@@ -45,6 +46,8 @@ const ProductListView = () => {
     );
   };
 
+  if (error) return <NotFound/>;
+
   return (
     <div className="product-list-container">
       <h1>Available Products</h1>
@@ -57,12 +60,20 @@ const ProductListView = () => {
         onChange={handleSearch}
       />
 
+      {/* View Cart Button */}
+      <div className="view-cart-container">
+        <Link to="view-cart" className="btn view-cart-button">
+          View Cart
+        </Link>
+      </div>
+
       {loading && <LoadingIndicator/>}
 
       <div className="product-grid">
         {filteredItems.map((item) => (
-          <div
+          <Link
             key={item.item_id + item.item_name}
+            to={`products/${item.item_id}`}
             className={`product-card ${
               item.discount_rates > 0 ? "discount-card" : ""
             }`}
@@ -70,19 +81,17 @@ const ProductListView = () => {
             {item.discount_rates > 0 && (
               <div className="discount-label">{item.discount_rates}% Off</div>
             )}
-            <Link to={`products/${item.item_id}`}>
-              <img
-                src={
-                  item.item_img? `https://res.cloudinary.com/dzieqk9ly/${item.item_img}` : "https://res.cloudinary.com/dzieqk9ly/image/upload/v1736636312/No_Image_Available_pt1pcr.jpg"
-                }
-                alt={item.item_name || "No Name"}
-              />
-            </Link>
-            <Link to={`products/${item.item_id}`}>
-              <h3>{item.item_name}</h3>
-            </Link>
+            <img
+              src={
+                item.item_img
+                  ? `https://res.cloudinary.com/dzieqk9ly/${item.item_img}`
+                  : noImgURL
+              }
+              alt={item.item_name || "No Name"}
+            />
+            <h3>{item.item_name}</h3>
             <p>${item.item_price}</p>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

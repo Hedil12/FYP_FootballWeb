@@ -7,6 +7,7 @@ import ProductDetails from "../pages/user/ProductDetails";
 import EventDetails from "../pages/user/EventDetails";
 import "../styles/UserDashboard.css";
 import { UserInfo } from "../constants";
+import CartView from "../pages/user/CartView";
 
 
 function LogOut() {
@@ -32,10 +33,10 @@ function DashboardUser() {
             <Link to="profile">Profile</Link>
           </li>
           <li>
-            <Link to="membership">Incentive Program</Link>
+            <Link to="membership">Memberships</Link>
           </li>
           <li>
-            <Link to="store">Store</Link>
+            <Link to="store">Catalog</Link>
           </li>
           <li>
             <Link to="events">Events</Link>
@@ -60,9 +61,10 @@ function DashboardUser() {
           <Route path="profile" element={<Profile/>} />
           <Route path="membership" element={<MembershipProgram />} />
           <Route path="events" element={<EventListView />} />
-          <Route path="store" element={<ProductListView/>}/>
-          <Route path="schedule/:event_Id" element={<EventDetails/>} />
           <Route path="store/products/:item_Id" element={<ProductDetails/>} />
+          <Route path="store" element={<ProductListView/>}/>
+          <Route path="store/view-cart" element={<CartView />} />
+          <Route path="events/schedule/:event_Id" element={<EventDetails/>} />
           <Route path="logout" element={<LogOut/>} />
         </Routes>
       </div>

@@ -89,20 +89,28 @@ class Store(models.Model):
     item_price = models.DecimalField(max_digits=8, decimal_places=2)
     discount_rates = models.DecimalField(max_digits=8, decimal_places=2)
     is_available = models.BooleanField(default=True)
-    item_img = CloudinaryField('image', blank=True)
+    item_img = CloudinaryField('image', blank=True, null=True)
     
     REQURIED_FIELDS = ['item_id','item_name', 'item_desc', 'item_qty', 
                        'item_price', 'discount_rates',
                        'is_available', 'item_img']
 
-class Cart(models.Model):
-    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+class CartItem(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='cart_items')
     item = models.ForeignKey(Store, on_delete=models.CASCADE)
-    date_of_purchase = models.DateField()
-    total_amount = models.DecimalField(max_digits=8, decimal_places=2)
+    qty = models.PositiveIntegerField(default=1)
+    
+    def __str__(self):
+        return f"{self.member.member_name}'s Cart "
 
-    class Meta:
-        unique_together = (("member", "item"),)
+class Cart(models.Model):
+    user = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='cart', null=True)
+    items = models.ManyToManyField(CartItem)
+
+    def calculate_total(self):
+        return sum(item.item.item_price * item.qty for item in self.items.all())
+
+
 
 class Event(models.Model):
     EVENT_TYPE_CHOICES = [
