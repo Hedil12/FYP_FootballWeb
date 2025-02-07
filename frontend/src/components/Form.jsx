@@ -9,34 +9,37 @@ import "../styles/Form.css";
 function Form({ route, method }) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [email, setEmail] = useState("");
+    const [email, setEmail] = useState("");  // email state for registration
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const name = method === "login" ? "Login" : "Register";
+    const name = method === "login" ? "Login" : "Register";  // Determine form name based on method
 
     const handleSubmit = async (e) => {
         setLoading(true);
         e.preventDefault();
 
+        // Basic validation
         if (!username || !password) {
             alert("All fields are required");
             setLoading(false);
             return;
         }
-        
-        if (method === "login" && (!username || !password)) {
-            alert("Username and password are required");
-            setLoading(false);
-            return;
-        } else if (method !== "login" && (!username || !password)) {
-            alert("All fields are required");
+
+        if (method === "register" && !email) {
+            alert("Email is required for registration");
             setLoading(false);
             return;
         }
 
         try {
-            const res = await api.post(route, { username, password });
+            // Set member_name to be the same as username during registration
+            const data = method === "login" 
+                ? { username, password } 
+                : { username, password, email, member_name: username };  // Set member_name to username for registration
+
+            const res = await api.post(route, data);
+
             if (method === "login") {
                 const token = res.data;
                 const decoded = jwtDecode(token.access);
@@ -53,12 +56,12 @@ function Form({ route, method }) {
                 // Redirect based on role
                 navigate(token.role === 'Admin' ? "/admin-Dashboard" : "/user-Dashboard");
             } else {
-                navigate("/login");
+                navigate("/login");  // Redirect to login page after successful registration
                 console.log('Register successful', res.data);
             }
         } catch (error) {
-            alert("Login failed: " + error.response?.data?.detail || error.message);
-            console.log("Login failed: " + error.response?.data?.detail || error.message);
+            alert("Error: " + error.response?.data?.detail || error.message);
+            console.log("Error: " + error.response?.data?.detail || error.message);
         } finally {
             setLoading(false);
         }
@@ -81,6 +84,15 @@ function Form({ route, method }) {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
             />
+            {method === "register" && (
+                <input
+                    className="form-input"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email"
+                />
+            )}
             {loading && <LoadingIndicator />}
             <button className="form-button" type="submit">
                 {name}

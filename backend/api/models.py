@@ -95,7 +95,7 @@ class Store(models.Model):
                        'item_price', 'discount_rates',
                        'is_available', 'item_img']
 
-class CartItem(models.Model):
+class CartItems(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='cart_items')
     item = models.ForeignKey(Store, on_delete=models.CASCADE)
     qty = models.PositiveIntegerField(default=1)
@@ -105,7 +105,7 @@ class CartItem(models.Model):
 
 class Cart(models.Model):
     user = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='cart', null=True)
-    items = models.ManyToManyField(CartItem)
+    items = models.ManyToManyField(CartItems)
 
     def calculate_total(self):
         return sum(item.item.item_price * item.qty for item in self.items.all())

@@ -51,7 +51,21 @@ class MemberSerializer(serializers.ModelSerializer):
             'password': {'write_only': True},
         }
 
+    def validate(self, data):
+        # Ensure role exist
+        if 'role' not in data:
+            raise serializers.ValidationError("Role is required.")
+        return data
+
     def create(self, validated_data):
+        # Set default values for role and membership if not provided
+        role = validated_data.get('role', Role.objects.get(role_id=1))
+        membership = validated_data.get('membership', Membership.objects.get(membership_tier=1))
+
+        # Create member instance with role and membership
+        validated_data['role'] = role
+        validated_data['membership'] = membership
+
         password = validated_data.pop('password', None)
         member = Member(**validated_data)
         if password:
@@ -77,16 +91,22 @@ class CartItemSerializer(serializers.ModelSerializer):
     item = StoreSerializer()  # Nest the Store serializer to include item details
 
     class Meta:
-        model = CartItem
+        model = CartItems
         fields = ['id', 'item', 'qty']
 
+    def calculate_total(self):
+        total_price = sum(
+            item['item']['item_price'] * item['qty'] 
+            for item in self.data['cart_items']
+        )
+        return total_price
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True)  # Include cart items with detailed info
 
     class Meta:
         model = Cart
-        fields = ['user', 'items']
+        fields = ['user', 'cart_items']
 
     def calculate_total(self):
         # Add a total price field to the serializer for easier response formatting

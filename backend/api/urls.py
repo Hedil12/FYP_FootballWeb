@@ -9,7 +9,7 @@ urlpatterns = [
     path('products/', StoreListView.as_view(), name='store-list-retrieve'),
     path('membership/', MembershipViewSet.as_view({'get':'list'}), name='membership-list'),
     path('events/', EventViewSet.as_view(), name='event-list'),
-        path('cart/view/', ViewCart.as_view(), name='view_cart'),
+    path('cart/view/', ViewCart.as_view(), name='view_cart'),
 
     #Viewed for Admins
     path('members/', MembersListView.as_view(), name='Member-list'),
@@ -28,8 +28,9 @@ urlpatterns = [
 
     #Cart
     path('cart/add/<int:product_id>/', AddToCartView.as_view(), name='add_to_cart'),
-    path('cart/buy-now/<int:product_id>/', BuyNowView.as_view(), name='buy_now'),
-    path('cart/delete/<int:product_id>/', RemoveFromCartView.as_view(), name='remove-from-cart')
+    path('cart/delete/<int:product_id>/', DeleteCartItemView.as_view(), name='remove-from-cart'),
+    path('cart/update/<int:cartItem_id>/', UpdateCartItemView.as_view(), name='update-item'),
+    path('cart/proceed-to-payment/', ProceedToPaymentView.as_view(), name='proceed-to-payment')
 ]
 
 if settings.DEBUG:

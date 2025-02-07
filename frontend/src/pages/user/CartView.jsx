@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api";
-import { ACCESS_TOKEN } from "../../constants";
+import { ACCESS_TOKEN, noImgURL } from "../../constants";
 import "../../styles/CartView.css";
 import LoadingIndicator from "../../components/LoadingIndicator";
+import NotFound from "../NotFound";
 
 const CartView = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -23,6 +24,7 @@ const CartView = () => {
     }
   }, [cartItems]);
 
+  // Fetch cart items
   const fetchCartItems = async () => {
     try {
       const response = await api.get("api/cart/view/", {
@@ -30,6 +32,7 @@ const CartView = () => {
           Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
         },
       });
+      console.log("Cart Items Response:", response.data); // Inspect the response
       setCartItems(response.data.cart_items || []);
       setSubtotal(response.data.total_price);
     } catch (error) {
@@ -40,6 +43,7 @@ const CartView = () => {
     }
   };
 
+  // Fetch related products
   const fetchRelatedProducts = async () => {
     try {
       const response = await api.get(`/api/products/`, {
@@ -53,10 +57,8 @@ const CartView = () => {
     }
   };
 
-  // ✅ Update quantity and remove if 0
+  // Update quantity
   const handleUpdateQuantity = async (itemId, newQuantity) => {
-    if (newQuantity > 99) return; // Prevent quantity above 99
-
     if (newQuantity < 1) {
       // Remove item if quantity reaches 0
       await handleDeleteItem(itemId);
@@ -64,38 +66,23 @@ const CartView = () => {
     }
 
     try {
-      await api.put(
-        `api/cart/edit/${itemId}/`,
-        { quantity: newQuantity },
+      await api.post(
+        `api/cart/add/${itemId}/`,
+        { quantity: Number(newQuantity) },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
           },
         }
       );
-
-      // ✅ Update state immediately instead of waiting for API refresh
-      setCartItems((prevItems) =>
-        prevItems.map((item) =>
-          item.product.id === itemId ? { ...item, quantity: newQuantity } : item
-        )
-      );
-
-      // ✅ Recalculate subtotal instantly
-      const updatedSubtotal = cartItems.reduce(
-        (acc, item) =>
-          item.product.id === itemId
-            ? acc + newQuantity * item.product.price
-            : acc + item.quantity * item.product.price,
-        0
-      );
-      setSubtotal(updatedSubtotal);
-    } catch (err) {
-      console.error("Failed to update quantity:", err);
+      fetchCartItems(); // Refresh the cart
+    } catch (error) {
+      console.error("Failed to update quantity:", error);
+      alert("Failed to update quantity. Please try again.");
     }
   };
 
-  // ✅ Remove item from cart
+  // Delete item
   const handleDeleteItem = async (itemId) => {
     try {
       await api.delete(`api/cart/delete/${itemId}/`, {
@@ -103,22 +90,15 @@ const CartView = () => {
           Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
         },
       });
-
-      setCartItems(cartItems.filter((item) => item.product.id !== itemId));
-      
-      // ✅ Recalculate subtotal instantly
-      const updatedSubtotal = cartItems.reduce(
-        (acc, item) =>
-          item.product.id !== itemId ? acc + item.quantity * item.product.price : acc,
-        0
-      );
-      setSubtotal(updatedSubtotal);
-    } catch (err) {
-      console.error("Failed to delete item:", err);
+      alert("Item removed from cart!");
+      fetchCartItems(); // Refresh the cart
+    } catch (error) {
+      console.error("Failed to delete item:", error);
+      alert("Failed to remove item from cart. Please try again.");
     }
   };
 
-  if (error) return <p>{error}</p>;
+  if (error) return <NotFound />;
 
   return (
     <div className="cart-view">
@@ -130,7 +110,7 @@ const CartView = () => {
         {cartItems.map((item, index) => (
           <div key={index} className="cart-item">
             <img
-              src={item.product.image}
+              src={item.product.image || noImgURL}
               alt={item.product.name}
               className="item-image"
             />
@@ -138,11 +118,28 @@ const CartView = () => {
               <h2>{item.product.name}</h2>
               <p>Price: ${item.product.price.toFixed(2)}</p>
               <div className="quantity-controls">
-                <button onClick={() => handleUpdateQuantity(item.product.id, item.quantity - 1)}>-</button>
+                <button
+                  onClick={() =>
+                    handleUpdateQuantity(item.product.id, item.quantity - 1)
+                  }
+                >
+                  -
+                </button>
                 <span>{item.quantity}</span>
-                <button onClick={() => handleUpdateQuantity(item.product.id, item.quantity + 1)}>+</button>
+                <button
+                  onClick={() =>
+                    handleUpdateQuantity(item.product.id, item.quantity + 1)
+                  }
+                >
+                  +
+                </button>
               </div>
-              <button className="remove-btn" onClick={() => handleDeleteItem(item.product.id)}>Remove</button>
+              <button
+                className="remove-btn"
+                onClick={() => handleDeleteItem(item.product.id)}
+              >
+                Remove
+              </button>
             </div>
           </div>
         ))}
@@ -160,12 +157,9 @@ const CartView = () => {
           <div className="related-products-grid">
             {relatedProducts.slice(0, showCount).map((p) => (
               <div className="related-product-item" key={p.item_id}>
-                <Link to={`/store/products/${p.item_id}`}>
+                <Link to={`user-Dashboard/store/products/${p.item_id}`}>
                   <img
-                    src={p.item_img ?
-                      `https://res.cloudinary.com/dzieqk9ly/${p.item_img}` :
-                      "https://res.cloudinary.com/dzieqk9ly/image/upload/v1736636312/No_Image_Available_pt1pcr.jpg"
-                    }
+                    src={p.item_img ? `https://res.cloudinary.com/dzieqk9ly/${p.item_img}` : noImgURL}
                     alt={p.item_name}
                     className="related-product-image"
                   />
