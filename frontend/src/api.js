@@ -32,5 +32,25 @@ api.interceptors.request.use(
     },
     async (error) => handle401Error(error)
 )
+// Schedule API calls
+export const fetchSchedules = async () => {
+  const response = await axios.get(`${BASE_URL}/events/`);
+  return response.data;
+};
+
+export const createSchedule = async (scheduleData) => {
+  const response = await axios.post(`${BASE_URL}/events/create/`, scheduleData);
+  return response.data;
+};
+
+export const updateSchedule = async (scheduleId, scheduleData) => {
+  const response = await axios.put(`${BASE_URL}/events/edit/${scheduleId}/`, scheduleData);
+  return response.data;
+};
+
+export const deleteSchedule = async (scheduleId) => {
+  const response = await axios.delete(`${BASE_URL}/events/delete/${scheduleId}/`);
+  return response.data;
+};
 
 export default api

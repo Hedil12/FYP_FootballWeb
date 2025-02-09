@@ -7,6 +7,47 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Member, Store, Event, Membership
 from .serializers import *
 from cloudinary.uploader import destroy, upload
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Event
+from .serializers import EventSerializer
+
+class EventListView(APIView):
+    def get(self, request):
+        events = Event.objects.filter(is_active=True).order_by('event_date_start')
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class EventDetailView(APIView):
+    def get(self, request, pk):
+        try:
+            event = Event.objects.get(pk=pk, is_active=True)
+            serializer = EventSerializer(event)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Event.DoesNotExist:
+            return Response({"error": "Event not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, pk):
+        try:
+            event = Event.objects.get(pk=pk)
+            serializer = EventSerializer(event, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Event.DoesNotExist:
+            return Response({"error": "Event not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, pk):
+        try:
+            event = Event.objects.get(pk=pk)
+            event.is_active = False
+            event.save()
+            return Response({"message": "Event deleted successfully"}, status=status.HTTP_200_OK)
+        except Event.DoesNotExist:
+            return Response({"error": "Event not found"}, status=status.HTTP_404_NOT_FOUND)
+
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer

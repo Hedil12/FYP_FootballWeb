@@ -122,6 +122,30 @@ DATABASES = {
     }
 }
 
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Add this line
+    'django.middleware.common.CommonMiddleware',  # Keep this if already present
+    ...
+]
+
+
+INSTALLED_APPS = [
+    
+    'corsheaders',
+    ...
+]
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Frontend URL for development
+    "http://127.0.0.1:5173",  # Alternate localhost
+]
+
+# Optional: Allow all origins during testing (not recommended for production)
+# CORS_ALLOW_ALL_ORIGINS = True
+
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -144,6 +168,8 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+
 
 
 

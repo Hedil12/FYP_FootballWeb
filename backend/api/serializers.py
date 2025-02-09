@@ -3,6 +3,18 @@ from .models import Membership, Role, Member, Store, Cart, Event, MemberEvent
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from cloudinary.forms import CloudinaryFileField
+from rest_framework import serializers
+from .models import Event
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = [
+            'event_id', 'event_name', 'event_desc', 'event_types',
+            'event_date_start', 'event_date_end', 'location', 'is_active',
+            'is_recurring', 'recurrence_interval', 'event_img'
+        ]
+
 
 class CustomTokenRefreshSerializer(TokenRefreshSerializer):
     def validate(self, attrs):
