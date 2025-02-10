@@ -1,0 +1,80 @@
+/* Container for the entire list */
+.even-list-container {
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .event-list-container h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  /* Grid Layout */
+  .event-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjust card size and responsiveness */
+    gap: 20px; /* Spacing between cards */
+    justify-content: center;
+    padding: 10px;
+  }
+  
+  /* Card Styling */
+/* Remove underline and style the link */
+.event-card {
+    text-decoration: none; /* Remove underline */
+    color: inherit; /* Inherit text color */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+    cursor: pointer;
+  }
+  
+  /* Glow effect and brightness on hover */
+  .event-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    filter: brightness(1.1); /* Brighten content */
+    outline: 2px solid rgba(255, 255, 0, 0.5); /* Add a subtle glowing outline */
+  }
+  
+  /* Image styling */
+  .event-card img {
+    width: 100%; /* Ensure image fits card width */
+    max-height: 200px; /* Set a max height */
+    object-fit: cover; /* Crop the image */
+    border-radius: 8px;
+    margin-bottom: 15px; /* Spacing between image and text */
+  }
+  
+  /* Strong tag styling for event name */
+  .event-card strong {
+    font-size: 1.2em;
+    color: #333;
+    text-align: center;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Paragraph styling for additional details */
+  .event-card p {
+    font-size: 1em;
+    color: #666;
+    margin: 0px 0 10px;
+    text-align: center;
+  }
+  
+  /* Hover Effect */
+  .event-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }

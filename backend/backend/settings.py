@@ -208,4 +208,5 @@ cloudinary.config(cloudinary_url="cloudinary://{API_KEY}:{API_SECRET}@{CLOUD_NAM
 
 MEDIA_URL = '/media/'  # or any prefix you choose
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+APPEND_SLASH = False
 

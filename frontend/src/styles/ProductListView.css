@@ -19,69 +19,73 @@
   padding: 10px;
 }
 
-/* Card Styling */
+/* Remove underline and style the link */
 .product-card {
-  position: relative; /* For positioning discount labels */
+  text-decoration: none; /* Remove underline */
+  color: inherit; /* Inherit text color */
+  display: flex;
+  flex-direction: column; /* Stack content */
+  align-items: center; /* Center-align content */
+  padding: 20px;
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
   cursor: pointer;
-  padding: 20px; /* More padding for a larger card appearance */
-  display: flex;
-  flex-direction: column; /* Ensures content stacks */
-  align-items: center;    /* Center aligns content */
 }
 
+/* Glow and brightness hover effect */
 .product-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  filter: brightness(1.1); /* Brightens the card */
+  outline: 2px solid rgba(0, 255, 255, 0.5); /* Subtle glow outline */
 }
 
-.discount-card {
-  border: 2px solid red; /* This ensures the red border is always visible for discount items */
-}
-
+/* Image styling */
 .product-card img {
-  width: 100%; /* Ensure image fits card width */
-  max-height: 200px; /* Set a larger max height */
-  object-fit: cover; /* Crops image to fit dimensions */
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
   border-radius: 8px;
-  margin-bottom: 15px; /* Spacing between image and other content */
+  margin-bottom: 15px;
 }
 
+/* Product name styling */
 .product-card h3 {
-  font-size: 1.2em; /* Larger text for titles */
+  font-size: 1.2em;
   color: #333;
+  text-align: center;
   margin-bottom: 8px;
-  text-align: center;
-  white-space: nowrap; /* Prevents text wrapping */
-  overflow: hidden; /* Hides overflow text */
-  text-overflow: ellipsis; /* Adds ellipsis for overflow text */
+  white-space: nowrap; /* Prevent wrapping */
+  overflow: hidden; /* Hide overflow */
+  text-overflow: ellipsis; /* Add ellipsis for long names */
 }
 
+/* Price styling */
 .product-card p {
-  font-size: 1em; /* Slightly larger text for price */
+  font-size: 1em;
   color: #666;
-  margin: 0px 0 10px; /* Margin below the price */
+  margin: 0 0 10px;
   text-align: center;
 }
 
-/* Discount Label */
+/* Discount label */
 .discount-label {
-  position: absolute; /* Stays positioned relative to .product-card */
-  top: 10px; /* Distance from the top edge */
-  right: 10px; /* Distance from the right edge */
-  background-color: red; /* Red background for the discount label */
-  color: white; /* White text color for contrast */
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: red;
+  color: white;
   font-size: 14px;
   font-weight: bold;
   padding: 4px 8px;
   border-radius: 3px;
   z-index: 10;
 }
+
 
 /* Hover Effect */
 .product-card:hover {

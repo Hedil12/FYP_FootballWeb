@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import api from "../../api";
-import { ACCESS_TOKEN } from "../../constants";
+import { ACCESS_TOKEN, noImgURL } from "../../constants";
 import "../../styles/EventDetails.css";
 import LoadingIndicator from "../../components/LoadingIndicator";
+import NotFound from "../NotFound";
 
 const EventDetails = () => {
     const { event_Id } = useParams();
-    console.log("URL:", useParams());
-    console.log("event_id: ",event_Id)
-    const navigate = useNavigate();
     const [event, setEvent] = useState(null);
     const [relatedEvents, setRelatedEvents] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [visibleCount, setVisibleCount] = useState(4); // To manage how many related products are shown
 
+    console.log("path: ", useParams());
+    console.log("Event id: ", event_Id);
     useEffect(() => {
         if (event_Id) {
             fetchEventDetails(event_Id);
@@ -31,6 +31,7 @@ const EventDetails = () => {
             const response = await api.get(`/api/events/retrieve/${event_Id}/`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
+                    "Content-Type": "multipart/form-data",
                 },
             });
             setEvent(response.data);
@@ -69,23 +70,20 @@ const EventDetails = () => {
         setVisibleCount((prevCount) => prevCount + 4); // Increase visible items by 4
     };
 
-    const handleEventClick = (event_id) => {
-      navigate(`/user-Dashboard/events/schedule/${event_id}`);
-    };
-
-    if (loading) return <LoadingIndicator />;
-    if (error) return <div className="error-message">{error}</div>;
     if (!event) return null;
+    if (error) return <NotFound/>;
 
     return (
         <div className="event-details-container">
+            {error && <p className="error-message">{error}</p>}
+            {loading && <LoadingIndicator/>}
             <div className="event-details-wrapper">
                 <div className="event-image">
                     <img
                         src={
                             event.event_img
                                 ? `https://res.cloudinary.com/dzieqk9ly/${event.event_img}`
-                                : "https://res.cloudinary.com/dzieqk9ly/image/upload/v1736636312/No_Image_Available_pt1pcr.jpg"
+                                : noImgURL
                         }
                         alt={event.event_name || "No Name"}
                         className="event-details-image"
@@ -94,7 +92,6 @@ const EventDetails = () => {
 
                 <div className="event-info">
                     <h1 className="event-title">{event.event_name}</h1>
-
                     <p className="event-description">
                         <strong>Description: </strong>
                         {event.event_desc}
@@ -128,17 +125,17 @@ const EventDetails = () => {
                 <h2>Related Events</h2>
                 <div className="related-events-grid">
                     {relatedEvents.slice(0, visibleCount).map((event) => (
-                        <div className="related-event-item"
-                         key={event.event_id}
-                         onClick={() => handleEventClick(event.event_id)}>
+                        <Link 
+                        key={event.event_id + event.event_name}
+                        to={`/user-Dashboard/events/schedule/${event.event_id}`}
+                        className="related-event-item">
                               <img
                                   src={`https://res.cloudinary.com/dzieqk9ly/${event.event_img}`}
                                   alt={event.event_name}
                                   className="related-event-image"
                               />
                               <h3 className="related-event-title">{event.event_name}</h3>
-                              <p className="related-event-price">${event.event_price}</p>
-                        </div>
+                        </Link>
                     ))}
                 </div>
                 {visibleCount < relatedEvents.length && (
