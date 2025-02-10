@@ -10,7 +10,6 @@ import ProductDetails from "../pages/user/ProductDetails";
 import UserList from "../pages/admin/UserList";
 
 
-
 function LogOut() {
   localStorage.clear();
   return <Navigate to="/login" replace={true} />;

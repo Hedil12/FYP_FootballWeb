@@ -89,7 +89,7 @@ class Store(models.Model):
     item_price = models.DecimalField(max_digits=8, decimal_places=2)
     discount_rates = models.DecimalField(max_digits=8, decimal_places=2)
     is_available = models.BooleanField(default=True)
-    item_img = CloudinaryField('image', blank=True, null=True, default='')
+    item_img = CloudinaryField('image', blank=True)
     
     REQURIED_FIELDS = ['item_id','item_name', 'item_desc', 'item_qty', 
                        'item_price', 'discount_rates',
@@ -110,6 +110,7 @@ class Event(models.Model):
         ('club_training', 'Club training sessions schedule'),
         ('agm', 'Annual General Meeting'),
         ('trial_selection', 'Trial selection'),
+        ('promotion','Promotion'),
     ]
     event_id = models.BigAutoField(primary_key=True)
     event_name = models.CharField(max_length=255)
@@ -119,8 +120,9 @@ class Event(models.Model):
     event_date_end = models.DateTimeField()
     location = models.CharField(max_length=255, default="")
     is_active = models.BooleanField(default=True)
+    event_img = CloudinaryField('image', blank=True, null=True, default='')
 
-    REQUIRED_FIELDS = ['event_name', 'event_types', 'event_start_date', 'event_date_end']
+    REQUIRED_FIELDS = ['event_id','event_name', 'event_types', 'event_date_start', 'event_date_end', 'event_img']
 
     def save(self, *args, **kwargs):
         if self.event_date_start and self.event_date_end:

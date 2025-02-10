@@ -92,6 +92,21 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = '__all__'
 
+    def validate(self, data):
+        # Validate dates
+        if data['event_date_end'] <= data['event_date_start']:
+            raise serializers.ValidationError({
+                'event_date_end': "End date must be after the start date."
+            })
+
+        # Validate event type
+        if data['event_types'] not in dict(Event.EVENT_TYPE_CHOICES):
+            raise serializers.ValidationError({
+                'event_types': "Invalid event type."
+            })
+
+        return data
+
 class MemberEventSerializer(serializers.ModelSerializer):
     member = MemberSerializer()
     event = EventSerializer()
