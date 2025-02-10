@@ -8,7 +8,6 @@ import "../styles/StaffDashboard.css";
 import UserList from "../pages/admin/UserList";
 
 
-
 function LogOut() {
   localStorage.clear();
   return <Navigate to="/login" replace={true} />;
@@ -26,6 +25,9 @@ function StaffDashboard() {
           <h3>Welcome back, {profile.username || "Admin"}!</h3>
         </div>
         <ul>
+          <li>
+            <Link to="manage-user">Manage User</Link>
+          </li>
           <li>
             <Link to="manage-user">Manage User</Link>
           </li>
