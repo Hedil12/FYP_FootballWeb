@@ -37,6 +37,7 @@ const EventList = () => {
             const response = await api.get('/api/events/', {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
+                    "Content-Type": "multipart/form-data",
                 },
             });
             setEvents(response.data);

@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api";
-import { ACCESS_TOKEN } from "../../constants";
-import "../../styles/ProductListView.css";
+import { ACCESS_TOKEN, noImgURL } from "../../constants";
 import { Link } from "react-router-dom";
+import "../../styles/ProductList.css";
 import LoadingIndicator from "../../components/LoadingIndicator";
 
 const ProductListView = () => {
   const [storeItems, setStoreItems] = useState([]);
-  const [filteredItems, setFilteredItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -19,17 +17,34 @@ const ProductListView = () => {
   const fetchStoreItems = async () => {
     setLoading(true);
     try {
-      const response = await api.get("api/products/", {
+      const response = await api.get("/api/products/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
-          "Content-Type": "multipart/form-data",
         },
       });
-      setStoreItems(response.data);
-      setFilteredItems(response.data);
+      const items = response.data;
+
+      // Filter items to show only one item per associated group (smallest item_id)
+      const uniqueItemsMap = new Map();
+
+      items.forEach(item => {
+        if (item.product_group) {
+          if (!uniqueItemsMap.has(item.product_group)) {
+            uniqueItemsMap.set(item.product_group, item);
+          } else {
+            const existingItem = uniqueItemsMap.get(item.product_group);
+            if (item.item_id < existingItem.item_id) {
+              uniqueItemsMap.set(item.product_group, item);
+            }
+          }
+        } else {
+          uniqueItemsMap.set(item.item_id, item);
+        }
+      });
+
+      setStoreItems(Array.from(uniqueItemsMap.values()));
     } catch (err) {
-      console.error("Error fetching products:", err);
-      setError("Failed to fetch products. Please try again.");
+      console.error("Failed to load products:", err);
     } finally {
       setLoading(false);
     }
@@ -38,50 +53,48 @@ const ProductListView = () => {
   const handleSearch = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
-    setFilteredItems(
-      storeItems.filter((item) =>
-        item.item_name.toLowerCase().includes(query)
-      )
-    );
   };
 
-  return (
-    <div className="product-list-container">
-      <h1>Available Products</h1>
-      {error && <p className="error-message">{error}</p>}
+  const filteredItems = storeItems.filter(
+    (item) =>
+      item.item_name.toLowerCase().includes(searchQuery) ||
+      item.item_id.toString().includes(searchQuery)
+  );
 
+  return (
+    <div className="product-list-view">
       <input
         type="text"
-        placeholder="Search products..."
+        className="search-bar"
+        placeholder="Search by Name or ID"
         value={searchQuery}
         onChange={handleSearch}
       />
 
-      {loading && <LoadingIndicator/>}
+     {/* View Cart Button */}
+      <div className="view-cart-container">
+        <Link to="view-cart" className="btn view-cart-button">
+          View Cart
+        </Link>
+      </div>
+
+      {loading && <LoadingIndicator />}
 
       <div className="product-grid">
         {filteredItems.map((item) => (
-          <div
-            key={item.item_id + item.item_name}
-            className={`product-card ${
-              item.discount_rates > 0 ? "discount-card" : ""
-            }`}
-          >
-            {item.discount_rates > 0 && (
-              <div className="discount-label">{item.discount_rates}% Off</div>
-            )}
-            <Link to={`products/${item.item_id}`}>
-              <img
-                src={
-                  item.item_img? `https://res.cloudinary.com/dzieqk9ly/${item.item_img}` : "https://res.cloudinary.com/dzieqk9ly/image/upload/v1736636312/No_Image_Available_pt1pcr.jpg"
-                }
-                alt={item.item_name || "No Name"}
-              />
-            </Link>
-            <Link to={`products/${item.item_id}`}>
-              <h3>{item.item_name}</h3>
-            </Link>
+          <div key={item.item_id} className="product-card">
+            <img
+              src={
+                item.item_img
+                  ? `https://res.cloudinary.com/dzieqk9ly/${item.item_img}`
+                  : noImgURL
+              }
+              alt={item.item_name}
+              className="product-image"
+            />
+            <h3>{item.item_name}</h3>
             <p>${item.item_price}</p>
+            {item.discount_rates > 0 && <p>Discount: {item.discount_rates}%</p>}
           </div>
         ))}
       </div>
@@ -89,4 +102,4 @@ const ProductListView = () => {
   );
 };
 
-export default ProductListView;
+export default ProductListView; 

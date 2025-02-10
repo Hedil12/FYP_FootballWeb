@@ -1,55 +1,66 @@
-/* General Styles for eventDetails Component */
-.event-details-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-}
-
 .event-details-wrapper {
   display: flex;
-  flex-direction: column;
+  align-items: center; /* Center items vertically */
+  justify-content: center; /* Center items horizontally */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
   max-width: 1200px;
   width: 100%;
-  margin-bottom: 40px;
+  margin: 0 auto; /* Center the container on the page */
+  gap: 20px; /* Add space between the image and the details */
+  padding: 20px; /* Add padding for breathing space */
 }
 
 .event-image {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
+  flex: 1;
+  max-width: 400px; /* Set a fixed max width for the image */
+  text-align: center; /* Center the image in its container */
 }
 
 .event-details-image {
-  max-width: 100%;
+  width: 100%;
   height: auto;
   border-radius: 10px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .event-info {
-  text-align: center;
+  flex: 2;
+  max-width: 600px; /* Set a max width for the text area */
+  text-align: left; /* Align text to the left */
+  padding: 20px; /* Add padding around the text */
 }
 
-.event-description, 
-.event-types, 
+.event-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #2c3e50;
+  text-align: center; /* Center the title */
+}
+
+.event-description {
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  line-height: 1.6;
+  color: #34495e;
+}
+
+.event-types,
 .event-startDate,
 .event-endDate,
 .event-location {
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-
-.event-description {
-  margin-bottom: 15px;
   font-size: 1rem;
+  color: #7f8c8d;
+  margin-bottom: 10px;
+  text-align: center; /* Center each detail */
 }
 
-.event-availability {
-  font-size: 1.2rem;
-  margin-bottom: 20px;
+.event-types em,
+.event-startDate em,
+.event-endDate em,
+.event-location em {
+  font-weight: bold;
+  color: #2c3e50;
 }
 
 .action-buttons {
@@ -67,7 +78,6 @@
   border-radius: 8px;
 }
 
-
 .related-events-container {
   max-width: 1200px;
   width: 100%;
@@ -76,8 +86,10 @@
 
 .related-events-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px; /* Increase the gap for better spacing */
+  width: 100%;
+  padding: 20px; /* Add padding around the grid for better alignment */
 }
 
 .related-event-item {
@@ -85,8 +97,14 @@
   padding: 15px;
   border-radius: 8px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
   text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s; /* Smooth hover animation */
+  cursor: pointer;
+}
+
+.related-event-item:hover {
+  transform: translateY(-5px); /* Slightly lift the card on hover */
+  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.2); /* More prominent shadow */
 }
 
 .related-event-image {
@@ -94,18 +112,33 @@
   height: 200px;
   object-fit: cover;
   border-radius: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  transition: transform 0.3s; /* Smooth zoom effect */
+}
+
+.related-event-item:hover .related-event-image {
+  transform: scale(1.05); /* Slight zoom on image hover */
 }
 
 .related-event-title {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: bold;
   margin-bottom: 10px;
+  color: #333;
+  transition: color 0.3s; /* Smooth color change on hover */
+  text-decoration: none; /* Prevent underlining of words */
 }
 
-.related-event-price {
-  font-size: 1.2rem;
-  color: #27ae60;
+.related-event-title:hover {
+  color: #007bff; /* Highlight text on hover */
+}
+
+a {
+  text-decoration: none; /* Prevent underlining for all links */
+}
+
+a:hover {
+  text-decoration: none; /* Prevent underlining on hover as well */
 }
 
 .btn.show-more {
@@ -123,5 +156,3 @@
 .btn.show-more:hover {
   background-color: #0056b3;
 }
-
-

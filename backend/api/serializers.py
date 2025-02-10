@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Membership, Role, Member, Store, Cart, Event, MemberEvent
+from .models import *
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from cloudinary.forms import CloudinaryFileField
@@ -51,7 +51,21 @@ class MemberSerializer(serializers.ModelSerializer):
             'password': {'write_only': True},
         }
 
+    def validate(self, data):
+        # Ensure role exist
+        if 'role' not in data:
+            raise serializers.ValidationError("Role is required.")
+        return data
+
     def create(self, validated_data):
+        # Set default values for role and membership if not provided
+        role = validated_data.get('role', Role.objects.get(role_id=1))
+        membership = validated_data.get('membership', Membership.objects.get(membership_tier=1))
+
+        # Create member instance with role and membership
+        validated_data['role'] = role
+        validated_data['membership'] = membership
+
         password = validated_data.pop('password', None)
         member = Member(**validated_data)
         if password:
@@ -59,38 +73,60 @@ class MemberSerializer(serializers.ModelSerializer):
         member.save()
         return member
 
+class ProductGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductGroup
+        fields = '__all__'
+
 class StoreSerializer(serializers.ModelSerializer):
     item_img = CloudinaryFileField()
+    product_group = serializers.PrimaryKeyRelatedField(queryset=ProductGroup.objects.all(), required=False)
+
     class Meta:
         model = Store
-        fields = ['item_id','item_name', 'item_desc', 
+        fields = ['item_id', 'product_group', 'item_name', 'size', 'item_desc', 
                   'item_qty', 'item_price', 'discount_rates',
-                'is_available', 'item_img']
-
+                  'is_available', 'item_img']
 
     def create(self, validated_data):
-        # You can add custom logic here if needed before saving
         store = Store.objects.create(**validated_data)
         return store
     
+class CartItemSerializer(serializers.ModelSerializer):
+    item = StoreSerializer()  # Nest the Store serializer to include item details
+
+    class Meta:
+        model = CartItems
+        fields = ['id', 'item', 'qty']
+
+    def calculate_total(self):
+        total_price = sum(
+            item['item']['item_price'] * item['qty'] 
+            for item in self.data['cart_items']
+        )
+        return total_price
+
 class CartSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(many=True)  # Include cart items with detailed info
+
     class Meta:
         model = Cart
-        fields = '__all__'
+        fields = ['user', 'cart_items']
 
-    def create(self, validated_data):
-        member_data = validated_data.pop('member')
-        item_data = validated_data.pop('item')
-        member = Member.objects.get(**member_data)  # Adjust as necessary
-        item = Store.objects.get(**item_data)  # Adjust as necessary
-        cart = Cart(member=member, item=item, **validated_data)
-        cart.save()
-        return cart
+    def calculate_total(self):
+        # Add a total price field to the serializer for easier response formatting
+        total_price = sum(
+            item['item']['item_price'] * item['qty'] 
+            for item in self.data['items']
+        )
+        return total_price
+
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = '__all__'
+        
 
     def validate(self, data):
         # Validate dates

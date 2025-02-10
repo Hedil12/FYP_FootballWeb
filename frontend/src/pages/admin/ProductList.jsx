@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api";
-import { ACCESS_TOKEN } from "../../constants";
+import { ACCESS_TOKEN, noImgURL } from "../../constants";
 import "../../styles/ProductList.css";
-import LoadingIndicator from '../../components/LoadingIndicator';
+import LoadingIndicator from "../../components/LoadingIndicator";
+import AssociateProducts from "./AssociateProducts";
 
 const ProductList = () => {
   const [storeItems, setStoreItems] = useState([]);
+  const [mode, setMode] = useState("create");
+  const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
     item_name: "",
     item_desc: "",
@@ -13,12 +16,13 @@ const ProductList = () => {
     item_price: "",
     discount_rates: 0,
     has_discounts: false,
-    is_available: false, // New state for availability
-    item_image: null, // To handle the image file
+    is_available: true,
+    item_image: null,
+    size: "NIL",
   });
   const [editingItemId, setEditingItemId] = useState(null);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchStoreItems();
@@ -32,7 +36,6 @@ const ProductList = () => {
           Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
         },
       });
-      console.log("Fetched Items:", response.data); // Log API response
       setStoreItems(response.data);
     } catch (err) {
       console.error("Failed to load products:", err);
@@ -43,87 +46,71 @@ const ProductList = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "has_discounts") {
-      setFormData({
-        ...formData,
-        [name]: e.target.checked,
-        discount_rates: e.target.checked ? 0 : formData.discount_rates, // Reset discount rates to 0 if unchecked
-      });
-    } else if (name === "is_available") {
-      setFormData({
-        ...formData,
-        [name]: e.target.checked,
-      });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+      discount_rates: type === "checkbox" && !checked ? 0 : formData.discount_rates,
+    });
   };
 
   const handleImageChange = (e) => {
     setFormData({ ...formData, item_img: e.target.files[0] });
   };
 
-  const handleEdit = (item) => {
-    setFormData({
-        item_name: item.item_name,
-        item_desc: item.item_desc,
-        item_qty: item.item_qty,
-        item_price: item.item_price,
-        discount_rates: item.discount_rates || 0,
-        has_discounts: item.has_discounts,
-        is_available: item.is_available,
-        item_image: item.item_img, // Do not prefill the image input
-    });
-    console.log("Editing item with ID:", item.item_id); // Debugging log
-    setEditingItemId(item.item_id); // Ensure correct ID is set
-};
-
-  
   const handleCreateOrUpdate = async (e) => {
     e.preventDefault();
-  
-    // Validation
-    if (!formData.item_name || !formData.item_desc || !formData.item_qty || !formData.item_price) {
+    if (!formData.item_name || !formData.item_desc || !formData.item_qty || !formData.item_price || (!editingItemId && !formData.item_img) || !formData.size) {
       setError("Please fill in all required fields.");
       return;
     }
-  
+
     const formDataObj = new FormData();
     Object.keys(formData).forEach((key) => {
       if (formData[key] !== null) {
         formDataObj.append(key, formData[key]);
       }
     });
-  
+
     try {
       const headers = {
         Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
         "Content-Type": "multipart/form-data",
       };
-  
-      if (editingItemId) {
-        // Update the item
-        console.log("Sending PUT request to update item with ID:", editingItemId);
-        const response = await api.put(`api/products/edit/${editingItemId}/`, formDataObj, { headers });
-        console.log("Updated item response:", response.data);
-      } else {
-        // Create a new item
-        console.log("Sending POST request to create a new item");
-        const response = await api.post("api/products/create/", formDataObj, { headers });
-        console.log("Created item response:", response.data);
-      }
-  
+      const endpoint = editingItemId ? `api/products/edit/${editingItemId}/` : "api/products/create/";
+      const method = editingItemId ? api.put : api.post;
+      const response = await method(endpoint, formDataObj, { headers });
+
+      console.log(editingItemId ? "Editing: " : "Created: ", response.data);
       fetchStoreItems();
       resetForm();
     } catch (err) {
-      console.error("Error during create/update:", err);
-      setError("Failed to save item. Please try again.");
+      if (err.response) {
+        console.error("Backend Error:", err.response.data);
+        setError(`Error: ${err.response.data.message || "Failed to save item."}`);
+      } else {
+        console.error("Unexpected Error:", err);
+        setError("Unexpected error occurred. Please try again.");
+      }
     }
   };
-  
+
+  const handleEdit = (item) => {
+    setFormData({
+      item_name: item.item_name,
+      item_desc: item.item_desc,
+      item_qty: item.item_qty,
+      item_price: item.item_price,
+      discount_rates: item.discount_rates,
+      has_discounts: item.discount_rates > 0,
+      is_available: item.is_available,
+      item_image: item.item_img,
+      size: item.size,
+    });
+    setEditingItemId(item.item_id);
+  };
+
   const handleDelete = async (itemId) => {
-    console.log("Attempting to delete item with ID:", itemId); // Debugging log
     if (window.confirm("Are you sure you want to delete this item?")) {
       try {
         const response = await api.delete(`api/products/delete/${itemId}/`, {
@@ -131,16 +118,15 @@ const ProductList = () => {
             Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
           },
         });
-        console.log("Delete response:", response.data); // Log success
-        fetchStoreItems(); // Refresh the list
+        console.log("Deleted: ", response);
+        fetchStoreItems();
       } catch (err) {
-        console.error("Failed to delete item:", err.response || err.message);
+        console.error("Failed to delete item:", err);
         setError("Failed to delete the item. Please try again.");
       }
     }
   };
-  
-  
+
   const resetForm = () => {
     setFormData({
       item_name: "",
@@ -149,106 +135,118 @@ const ProductList = () => {
       item_price: "",
       discount_rates: 0,
       has_discounts: false,
-      is_available: false, // Reset availability
+      is_available: true,
       item_image: null,
+      size: "NIL",
     });
     setEditingItemId(null);
   };
 
-  return (
-    <div className="product-list-container">
-      <h2>Manage Products</h2>
-      {error && <p className="error-message">{error}</p>}
+  const filteredItems = storeItems.filter(
+    (item) =>
+      item.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.item_id.toString().includes(searchQuery)
+  );
 
-      <form onSubmit={handleCreateOrUpdate} className="product-form">
-        <input
-          type="text"
-          name="item_name"
-          placeholder="Item Name"
-          value={formData.item_name}
-          onChange={handleInputChange}
-          required
-        />
-        <input
-          type="text"
-          name="item_desc"
-          placeholder="Item Description"
-          value={formData.item_desc}
-          onChange={handleInputChange}
-          required
-        />
-        <input
-          type="number"
-          name="item_qty"
-          placeholder="Quantity"
-          value={formData.item_qty}
-          onChange={handleInputChange}
-          required
-        />
-        <input
-          type="number"
-          name="item_price"
-          placeholder="Price"
-          value={formData.item_price}
-          onChange={handleInputChange}
-          required
-        />
-        <input
-          type="number"
-          step="0.01"
-          name="discount_rates"
-          placeholder="Discount Rates (%)"
-          value={formData.discount_rates}
-          onChange={handleInputChange}
-          disabled={!formData.has_discounts} // Disable when "Has Discounts" is unchecked
-        />
-        <label>
-          <input
-            type="checkbox"
-            name="has_discounts"
-            checked={formData.has_discounts}
-            onChange={handleInputChange}
-          />
-          Has Discounts?
-        </label>
-        <input
-          type="file"
-          accept="*"
-          onChange={handleImageChange}
-          required={!editingItemId || formData.item_image === null}
-        />
-        
-        
-        <button type="submit">
-          {editingItemId ? "Update Item" : "Create Item"}
+  return (
+    <div className="product-management">
+      {error && <p className="error-message">{error}</p>}
+      <div className="mode-toggle">
+        <button
+          className={mode === "create" ? "active" : ""}
+          onClick={() => setMode("create")}
+        >
+          Create Product
         </button>
-        {editingItemId && <button onClick={resetForm}>Cancel</button>}
-      </form>
+        <button
+          className={mode === "associate" ? "active" : ""}
+          onClick={() => setMode("associate")}
+        >
+          Associate Products
+        </button>
+      </div>
 
       {loading && <LoadingIndicator />}
+      {mode === "create" ? (
+        <>
+          <form onSubmit={handleCreateOrUpdate} className="product-form">
+            {['item_name', 'item_desc', 'item_qty', 'item_price', 'size'].map((field) => (
+              <input
+                key={field}
+                type={field.includes("qty") || field.includes("price") ? "number" : "text"}
+                name={field}
+                placeholder={field.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                value={formData[field]}
+                onChange={handleInputChange}
+                required
+              />
+            ))}
 
-      <div className="product-grid">
-        {storeItems.map((item) => (
-          <div key={item.item_id+item.item_name} className="product-card">
-            <img
-              src={item.item_img ? `https://res.cloudinary.com/dzieqk9ly/${item.item_img}` : "https://res.cloudinary.com/dzieqk9ly/image/upload/v1736636312/No_Image_Available_pt1pcr.jpg"}
-              alt={item.item_name || "No Name"}
+            <input
+              type="file"
+              accept="*"
+              onChange={handleImageChange}
+              required={!editingItemId || formData.item_image === null}
             />
-            <h3>{item.item_name || "No Name Provided"}</h3>
-            <p>{item.item_desc || "No Description"}</p>
-            <p>${item.item_price || "0.00"}</p>
-            <p>Quantity: {item.item_qty || "N/A"}</p>
-            <p>
-              Discount: {item.has_discounts ? `${item.discount_rates}%` : "No Discounts"}
-            </p>
-            <p>
-              Availability: {item.is_available ? "Available" : "Not Available"}
-            </p>
-            <button onClick={() => handleEdit(item)}>Edit</button>
-            <button onClick={() => handleDelete(item.item_id)}>Delete</button>
+
+            <label className="discount-label">
+              <input
+                type="checkbox"
+                name="has_discounts"
+                checked={formData.has_discounts}
+                onChange={handleInputChange}
+              />
+              Apply Discount
+            </label>
+
+            {formData.has_discounts && (
+              <input
+                type="number"
+                name="discount_rates"
+                placeholder="Discount Rate (%)"
+                value={formData.discount_rates}
+                onChange={handleInputChange}
+                required
+              />
+            )}
+
+            <button type="submit">{editingItemId ? "Update" : "Create"}</button>
+          </form>
+
+          <input
+            type="text"
+            className="search-bar"
+            placeholder="Search by Name or ID"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+
+          <div className="product-grid">
+            {filteredItems.map((item) => (
+              <div key={item.item_id} className="product-card">
+                <div className="product-image-container">
+                  <img
+                    src={item.item_img ? `https://res.cloudinary.com/dzieqk9ly/${item.item_img}` : noImgURL}
+                    alt={item.item_name}
+                    className="product-image"
+                  />
+                </div>
+                <h3>{item.item_name}</h3>
+                <p>{item.item_desc}</p>
+                <p>Size: {item.size || "No size required"}</p>
+                <p>${item.item_price}</p>
+                {item.discount_rates > 0 && <p>Discount: {item.discount_rates}%</p>}
+                <div className="card-actions">
+                  <button onClick={() => handleEdit(item)}>Edit</button>
+                  <button onClick={() => handleDelete(item.item_id)}>Delete</button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      ) : (
+        <AssociateProducts storeItems={storeItems} fetchStoreItems={fetchStoreItems} />
+      )}
     </div>
   );
 };
