@@ -10,6 +10,8 @@ const ProductDetails = () => {
   const { item_Id } = useParams();
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [associatedItems, setAssociatedItems] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showCount, setShowCount] = useState(4);
@@ -32,11 +34,28 @@ const ProductDetails = () => {
         },
       });
       setProduct(response.data);
+      fetchAssociatedItems(response.data.product_group);
     } catch (err) {
       console.error("Error fetching product details:", err);
       setError("Failed to load product details.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAssociatedItems = async (groupId) => {
+    if (!groupId) return;
+    try {
+      const response = await api.get(`/api/products/`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
+        },
+      });
+      const filteredItems = response.data.filter(item => item.product_group === groupId);
+      setAssociatedItems(filteredItems);
+      setSelectedItem(filteredItems[0]);
+    } catch (err) {
+      console.error("Error fetching associated items:", err);
     }
   };
 
@@ -57,14 +76,19 @@ const ProductDetails = () => {
   };
 
   const handleAddToCart = async () => {
-    if (quantity <= 0 || quantity > product.item_qty) {
-      alert(`Invalid quantity. Please select a number between 1 and ${product.item_qty}.`);
+    if (!selectedItem) {
+      alert("Please select a size.");
+      return;
+    }
+
+    if (quantity <= 0 || quantity > selectedItem.item_qty) {
+      alert(`Invalid quantity. Please select a number between 1 and ${selectedItem.item_qty}.`);
       return;
     }
 
     try {
       await api.post(
-        `api/cart/add/${item_Id}/`,
+        `api/cart/add/${selectedItem.item_id}/`,
         { quantity },
         {
           headers: {
@@ -72,7 +96,7 @@ const ProductDetails = () => {
           },
         }
       );
-      alert(`${quantity} x ${product.item_name} added to cart!`);
+      alert(`${quantity} x ${selectedItem.item_name} (Size: ${selectedItem.size}) added to cart!`);
     } catch (error) {
       console.error("Error adding to cart:", error);
       alert("Failed to add item to cart. Please try again.");
@@ -80,17 +104,22 @@ const ProductDetails = () => {
   };
 
   const handleBuyNow = async () => {
+    if (!selectedItem) {
+      alert("Please select a size.");
+      return;
+    }
+
     try {
       await api.post(
-        `api/cart/add/${item_Id}/`,
-        { quantity:1 },
+        `api/cart/add/${selectedItem.item_id}/`,
+        { quantity: 1 },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
           },
         }
       );
-      navigate("/user-Dashboard/store/view-cart"); // Redirect to cart
+      navigate("/user-Dashboard/store/view-cart");
     } catch (error) {
       console.error("Error buying item:", error);
       alert("Failed to proceed to payment. Please try again.");
@@ -99,54 +128,84 @@ const ProductDetails = () => {
 
   const handleQuantityChange = (e) => {
     const value = parseInt(e.target.value);
-    if (!isNaN(value) && value >= 1 && value <= product.item_qty) {
+    const maxQty = selectedItem ? selectedItem.item_qty : product.item_qty;
+
+    if (!isNaN(value) && value >= 1 && value <= maxQty) {
       setQuantity(value);
+    } else if (value > maxQty) {
+      alert(`Selected quantity exceeds available stock (${maxQty}).`);
+      setQuantity(maxQty);
     }
   };
 
-  if (!product) return <p>No item available</p>;
+  const handleSizeChange = (itemId) => {
+    const selected = associatedItems.find(item => item.item_id === itemId);
+    setSelectedItem(selected);
+  };
+
+  if (loading) return <LoadingIndicator />;
   if (error) return <NotFound />;
+  if (!product) return <p>No item available</p>;
 
   return (
     <div className="product-details-container">
       {error && <p className="error-message">{error}</p>}
-      {loading && <LoadingIndicator />}
 
       <div className="product-details-wrapper">
-        {/* Product Image */}
         <div className="product-image">
           <img
             src={
-              product.item_img
+              selectedItem && selectedItem.item_img
+                ? `https://res.cloudinary.com/dzieqk9ly/${selectedItem.item_img}`
+                : product.item_img
                 ? `https://res.cloudinary.com/dzieqk9ly/${product.item_img}`
                 : noImgURL
             }
-            alt={product.item_name}
+            alt={selectedItem ? selectedItem.item_name : product.item_name}
             className="product-details-image"
           />
         </div>
 
-        {/* Product Info */}
         <div className="product-info">
-          <h1 className="product-title">{product.item_name}</h1>
-          <p className="product-price">${product.item_price}</p>
+          <h1 className="product-title">{selectedItem ? selectedItem.item_name : product.item_name}</h1>
+          <p className="product-price">${selectedItem ? selectedItem.item_price : product.item_price}</p>
 
-          {product.discount_rates > 0 && (
+          {selectedItem && selectedItem.discount_rates > 0 && (
             <div className="discount-container">
               <span className="discount-label">Discount</span>
-              <span className="discount-amount">{product.discount_rates}%</span>
+              <span className="discount-amount">{selectedItem.discount_rates}%</span>
             </div>
           )}
 
           <p className="product-description">
             <strong>Description: </strong>
-            {product.item_desc}
+            {selectedItem ? selectedItem.item_desc : product.item_desc}
           </p>
 
           <p className="product-availability">
             <strong>Availability: </strong>
-            {product.is_available ? "Available" : "Out of Stock"}
+            {selectedItem ? (selectedItem.is_available ? "Available" : "Out of Stock") : (product.is_available ? "Available" : "Out of Stock")}
           </p>
+
+          {/* Size Selection */}
+          {associatedItems.length > 0 && (
+            <div className="size-selection">
+              <h4>Select Size:</h4>
+              {associatedItems.map((item) => (
+                <div key={item.item_id} className="size-option">
+                  <input
+                    type="radio"
+                    id={`size-${item.item_id}`}
+                    name="size"
+                    value={item.item_id}
+                    checked={selectedItem && selectedItem.item_id === item.item_id}
+                    onChange={() => handleSizeChange(item.item_id)}
+                  />
+                  <label htmlFor={`size-${item.item_id}`}>{item.size}</label>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Quantity Selector */}
           <div className="quantity-container">
@@ -158,11 +217,16 @@ const ProductDetails = () => {
               value={quantity}
               onChange={handleQuantityChange}
               min="1"
-              max={product.item_qty}
+              max={selectedItem ? selectedItem.item_qty : product.item_qty}
             />
             <button
               onClick={() =>
-                setQuantity(Math.min(product.item_qty, quantity + 1))
+                setQuantity(
+                  Math.min(
+                    selectedItem ? selectedItem.item_qty : product.item_qty,
+                    quantity + 1
+                  )
+                )
               }
             >
               +

@@ -52,7 +52,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=255)
     member_email = models.EmailField(max_length=255, unique=True)
     cashback_points = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
-    expiration_date = models.DateField(null=True, blank=True)
+    expiration_date = models.DateField(null=True, blank=True, default=None)
     is_active = models.BooleanField(default=True)
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)  # Determines admin access
@@ -81,17 +81,26 @@ class Member(AbstractBaseUser, PermissionsMixin):
         }
 
 
+class ProductGroup(models.Model):
+    group_id = models.BigAutoField(primary_key=True)
+    group_name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.group_name
+
 class Store(models.Model):
     item_id = models.BigAutoField(primary_key=True)
+    product_group = models.ForeignKey(ProductGroup, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     item_name = models.CharField(max_length=255)
+    size = models.CharField(max_length=10, default="NIL")
     item_desc = models.CharField(max_length=255)
     item_qty = models.BigIntegerField()
     item_price = models.DecimalField(max_digits=8, decimal_places=2)
     discount_rates = models.DecimalField(max_digits=8, decimal_places=2)
     is_available = models.BooleanField(default=True)
     item_img = CloudinaryField('image', blank=True, null=True)
-    
-    REQURIED_FIELDS = ['item_id','item_name', 'item_desc', 'item_qty', 
+
+    REQUIRED_FIELDS = ['item_id','item_name', 'item_desc', 'item_qty', 
                        'item_price', 'discount_rates',
                        'is_available', 'item_img']
 

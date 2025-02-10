@@ -13,12 +13,19 @@ urlpatterns = [
 
     #Viewed for Admins
     path('members/', MembersListView.as_view(), name='Member-list'),
+    path('members/update/<int:member_id>/', MemberUpdateView.as_view(), name='member-update'),
+    path('members/delete/<int:member_id>/', MemberDeleteView.as_view(), name='member-delete'),
+
+
     #Products
     path('products/create/', StoreCreateView.as_view(), name='store-create'),
     path('products/delete/<int:item_id>/', StoreDeleteItem.as_view(), name='store-delete'),
     path('products/edit/<int:item_id>/', StoreUpdateItem.as_view(), name='store-update'),
     path('products/retrieve/<int:item_id>/', StoreRetrieveItem.as_view(), name='store-retrieval'),
-    #Carts
+    path('products/product-groups/', ProductGroupViewSet.as_view({'get':'list'}), name='checkout'),
+    path('products/associate/', AssociateProductsView.as_view(), name='associate-products'),
+    path('products/disassociate/', AssociateProductsDelete.as_view(), name='disassociate-products'),
+    path('products/<int:pk>/disassociate/update/', AssociateProductsUpdate.as_view(), name='update-associate-product'),
     
     #Event
     path('events/create/', EventCreateView.as_view(), name='event-list'),

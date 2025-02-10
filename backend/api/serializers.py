@@ -73,17 +73,22 @@ class MemberSerializer(serializers.ModelSerializer):
         member.save()
         return member
 
+class ProductGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductGroup
+        fields = '__all__'
+
 class StoreSerializer(serializers.ModelSerializer):
     item_img = CloudinaryFileField()
+    product_group = serializers.PrimaryKeyRelatedField(queryset=ProductGroup.objects.all(), required=False)
+
     class Meta:
         model = Store
-        fields = ['item_id','item_name', 'item_desc', 
+        fields = ['item_id', 'product_group', 'item_name', 'size', 'item_desc', 
                   'item_qty', 'item_price', 'discount_rates',
-                'is_available', 'item_img']
-
+                  'is_available', 'item_img']
 
     def create(self, validated_data):
-        # You can add custom logic here if needed before saving
         store = Store.objects.create(**validated_data)
         return store
     
