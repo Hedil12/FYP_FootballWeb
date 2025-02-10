@@ -127,7 +127,7 @@ class Event(models.Model):
         ('club_training', 'Club training sessions schedule'),
         ('agm', 'Annual General Meeting'),
         ('trial_selection', 'Trial selection'),
-        ('promotion','Promotion'),
+        ('promotion', 'Promotion'),
     ]
     event_id = models.BigAutoField(primary_key=True)
     event_name = models.CharField(max_length=255)
@@ -137,15 +137,38 @@ class Event(models.Model):
     event_date_end = models.DateTimeField()
     location = models.CharField(max_length=255, default="")
     is_active = models.BooleanField(default=True)
+    is_recurring = models.BooleanField(default=False)  # For recurring events
+    recurrence_interval = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        choices=[
+            ('daily', 'Daily'),
+            ('weekly', 'Weekly'),
+            ('monthly', 'Monthly'),
+        ]
+    )
     event_img = CloudinaryField('image', blank=True, null=True, default='')
 
-    REQUIRED_FIELDS = ['event_id','event_name', 'event_types', 'event_date_start', 'event_date_end', 'event_img']
+    REQUIRED_FIELDS = [
+        'event_id', 'event_name', 'event_types',
+        'event_date_start', 'event_date_end', 'event_img'
+    ]
 
     def save(self, *args, **kwargs):
         if self.event_date_start and self.event_date_end:
             if self.event_date_end <= self.event_date_start:
                 raise ValueError("End date must be after the start date.")
         super().save(*args, **kwargs)
+
+    @staticmethod
+    def get_events_by_date_range(start_date, end_date):
+        return Event.objects.filter(
+            event_date_start__gte=start_date,
+            event_date_end__lte=end_date,
+            is_active=True
+        ).order_by('event_date_start')
+
 
 class MemberEvent(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
