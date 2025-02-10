@@ -6,6 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import UserDashboard from "./routes/UserDashboard";
 import StaffDashboard from "./routes/StaffDashboard";
 import Register from "./pages/Register";
+import ViewCart from "./components/ViewCart";
 
 function LogOut() {
   localStorage.clear();
@@ -39,6 +40,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/cart" element={<ViewCart />} />
         <Route path="/logout" element={<LogOut />} />
         <Route path="/register" element={<RegisterandLogOut />} />
         <Route path="*" element={<NotFound />} />
