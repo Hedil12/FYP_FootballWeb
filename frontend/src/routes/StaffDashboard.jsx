@@ -6,6 +6,9 @@ import ProductList from "../pages/admin/ProductList";
 import EventList from "../pages/admin/EventList";
 import { UserInfo } from "../constants";
 import "../styles/StaffDashboard.css";
+import ProductDetails from "../pages/user/ProductDetails";
+import UserList from "../pages/admin/UserList";
+
 
 
 function LogOut() {
@@ -14,7 +17,6 @@ function LogOut() {
 }
 
 function RegisterUsers() {
-  localStorage.clear();
   return <Register />;
 }
 
@@ -34,6 +36,9 @@ function StaffDashboard() {
             <Link to="register-user">Register User</Link>
           </li>
           <li>
+            <Link to="manage-user">Manage User</Link>
+          </li>
+          <li>
             <Link to="manage-stores">Manage Stores</Link>
           </li>
           <li>
@@ -49,6 +54,7 @@ function StaffDashboard() {
       <main className="content">
         <Routes>
           <Route path="register-user" element={<RegisterUsers />} />
+          <Route path="manage-user" element={<UserList />} />
           <Route path="manage-stores" element={<ProductList />} />
           <Route path="manage-events" element={<EventList />} />
           <Route path="login" element={<Login />} />
