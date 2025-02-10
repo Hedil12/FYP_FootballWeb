@@ -32,19 +32,28 @@ const AssociateProducts = ({ storeItems, fetchStoreItems }) => {
       setError("Group name is required.");
       return;
     }
-
+  
+    if (selectedProducts.length === 0) {
+      setError("Please select at least one product to associate.");
+      return;
+    }
+  
     try {
       setLoading(true);
-      await api.post(`api/products/associate/`, {
-        product_group: selectedProducts.map(product => product.item_id),
+      const pk = selectedProducts[0]?.item_id;  // Assuming PK is the first selected product's ID
+  
+      const response = await api.post(`api/products/associate/${pk}/`, {
+        associated_products: selectedProducts.map(product => product.item_id),
         group_name: groupName
       }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'application/json'
         }
       });
+  
       alert("Products successfully associated!");
+      setGroupId(response.data.group_id);
       fetchStoreItems();
       setSelectedProducts([]);
       setGroupName("");
@@ -60,6 +69,7 @@ const AssociateProducts = ({ storeItems, fetchStoreItems }) => {
       setLoading(false);
     }
   };
+  
 
   const updateAssociations = async (groupId) => {
     if (!groupName.trim()) {
@@ -96,15 +106,28 @@ const AssociateProducts = ({ storeItems, fetchStoreItems }) => {
   };
 
   const deleteAssociation = async () => {
+    if (selectedProducts.length === 0) {
+      setError("Please select products to disassociate.");
+      return;
+    }
+  
+    const groupIds = [...new Set(selectedProducts
+      .filter(product => product.product_group)
+      .map(product => product.product_group))];
+  
+    if (groupIds.length === 0) {
+      setError("Selected products do not belong to any group.");
+      return;
+    }
+  
     try {
       setLoading(true);
       await api.patch(`api/products/disassociate/`, {
-        data: {
-          product_group: selectedProducts.map(product => product.item_id)
-        },
+        product_groups: groupIds
+      }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
-          "Content-Type": "multipart/form-data"
+          "Content-Type": "application/json"
         }
       });
       alert("Products successfully disassociated!");
@@ -113,7 +136,7 @@ const AssociateProducts = ({ storeItems, fetchStoreItems }) => {
     } catch (err) {
       if (err.response) {
         console.error("Backend Error:", err.response);
-        setError(`Error: ${err.response.data.error || "Failed to disassociate item."}`);
+        setError(`Error: ${err.response.data.error || "Failed to disassociate items."}`);
       } else {
         console.error("Unexpected Error:", err);
         setError("Unexpected error occurred. Please try again.");

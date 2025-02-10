@@ -29,9 +29,6 @@ function StaffDashboard() {
             <Link to="manage-user">Manage User</Link>
           </li>
           <li>
-            <Link to="manage-user">Manage User</Link>
-          </li>
-          <li>
             <Link to="manage-stores">Manage Stores</Link>
           </li>
           <li>

@@ -98,7 +98,7 @@ class Store(models.Model):
     item_price = models.DecimalField(max_digits=8, decimal_places=2)
     discount_rates = models.DecimalField(max_digits=8, decimal_places=2)
     is_available = models.BooleanField(default=True)
-    item_img = CloudinaryField('image', blank=True, null=True)
+    item_img = CloudinaryField('image')
 
     REQUIRED_FIELDS = ['item_id','item_name', 'item_desc', 'item_qty', 
                        'item_price', 'discount_rates',

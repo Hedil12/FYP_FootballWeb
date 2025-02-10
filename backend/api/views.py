@@ -276,9 +276,9 @@ class DeleteCartItemView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
-    def delete(self, request, item_id):
+    def delete(self, request, product_id):
         user = request.user
-        product = get_object_or_404(Store, pk=item_id)
+        product = get_object_or_404(Store, pk=product_id)
         cart = Cart.objects.get(user=user)
         cart_item = get_object_or_404(CartItems, item=product, member=user)
         cart_item.delete()
@@ -334,29 +334,49 @@ class AssociateProductsView(generics.GenericAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, pk):
+    def post(self, request, pk=None):
         group_name = request.data.get('group_name')
         associated_product_ids = request.data.get('associated_products', [])
+        
         if not group_name:
             return Response({'error': 'Group name is required.'}, status=status.HTTP_400_BAD_REQUEST)
-        product_group = ProductGroup.objects.create(name=group_name)
-        Store.objects.filter(item_id__in=associated_product_ids + [pk]).update(product_group=product_group)
-        return Response({'success': 'Products successfully associated.'}, status=status.HTTP_200_OK)
+        
+        # Create a new ProductGroup
+        product_group = ProductGroup.objects.create(group_name=group_name)
+        
+        # Associate products with the new group
+        Store.objects.filter(item_id__in=associated_product_ids).update(product_group=product_group)
+        
+        return Response({'success': 'Products successfully associated.', 'group_id': product_group.group_id}, status=status.HTTP_200_OK)
 
+    
 class AssociateProductsUpdate(generics.UpdateAPIView):    
     queryset = ProductGroup.objects.all()
     serializer_class = ProductGroupSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, pk):
+    def put(self, request, pk):
         group_name = request.data.get('group_name')
         associated_product_ids = request.data.get('associated_products', [])
+        
         if not group_name:
             return Response({'error': 'Group name is required.'}, status=status.HTTP_400_BAD_REQUEST)
-        product_group = ProductGroup.objects.create(name=group_name)
-        Store.objects.filter(item_id__in=associated_product_ids + [pk]).update(product_group=product_group)
-        return Response({'success': 'Products successfully associated.'}, status=status.HTTP_200_OK)
+        
+        try:
+            product_group = ProductGroup.objects.get(pk=pk)
+        except ProductGroup.DoesNotExist:
+            return Response({'error': 'Product group not found.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Update the group name
+        product_group.group_name = group_name
+        product_group.save()
+
+        # Update product associations
+        Store.objects.filter(item_id__in=associated_product_ids).update(product_group=product_group)
+        
+        return Response({'success': 'Products successfully updated.'}, status=status.HTTP_200_OK)
+
 
 class AssociateProductsDelete(generics.UpdateAPIView):    
     queryset = ProductGroup.objects.all()

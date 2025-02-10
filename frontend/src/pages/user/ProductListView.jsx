@@ -71,7 +71,6 @@ const ProductListView = () => {
         onChange={handleSearch}
       />
 
-     {/* View Cart Button */}
       <div className="view-cart-container">
         <Link to="view-cart" className="btn view-cart-button">
           View Cart
@@ -83,18 +82,16 @@ const ProductListView = () => {
       <div className="product-grid">
         {filteredItems.map((item) => (
           <div key={item.item_id} className="product-card">
-            <img
-              src={
-                item.item_img
-                  ? `https://res.cloudinary.com/dzieqk9ly/${item.item_img}`
-                  : noImgURL
-              }
-              alt={item.item_name}
-              className="product-image"
-            />
-            <h3>{item.item_name}</h3>
-            <p>${item.item_price}</p>
-            {item.discount_rates > 0 && <p>Discount: {item.discount_rates}%</p>}
+            <Link to={`/user-Dashboard/store/products/${item.item_id}`}>
+              <img
+                src={item.item_img ? `https://res.cloudinary.com/dzieqk9ly/${item.item_img}` : noImgURL}
+                alt={item.item_name}
+                className="product-image"
+              />
+              <h3>{item.item_name}</h3>
+              <p>${item.item_price}</p>
+              {item.discount_rates > 0 && <p>Discount: {item.discount_rates}%</p>}
+            </Link>
           </div>
         ))}
       </div>
@@ -102,4 +99,4 @@ const ProductListView = () => {
   );
 };
 
-export default ProductListView; 
+export default ProductListView;

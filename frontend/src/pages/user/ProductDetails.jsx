@@ -66,9 +66,28 @@ const ProductDetails = () => {
           Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
         },
       });
-      const filteredProducts = response.data.filter(
+  
+      const uniqueProductsMap = new Map();
+  
+      response.data.forEach(product => {
+        if (product.product_group) {
+          if (!uniqueProductsMap.has(product.product_group)) {
+            uniqueProductsMap.set(product.product_group, product);
+          } else {
+            const existingProduct = uniqueProductsMap.get(product.product_group);
+            if (product.item_id < existingProduct.item_id) {
+              uniqueProductsMap.set(product.product_group, product);
+            }
+          }
+        } else {
+          uniqueProductsMap.set(product.item_id, product);
+        }
+      });
+  
+      const filteredProducts = Array.from(uniqueProductsMap.values()).filter(
         (p) => p.item_id !== parseInt(item_Id)
       );
+  
       setRelatedProducts(filteredProducts);
     } catch (err) {
       console.error("Error fetching related products:", err);

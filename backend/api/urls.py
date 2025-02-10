@@ -23,7 +23,7 @@ urlpatterns = [
     path('products/edit/<int:item_id>/', StoreUpdateItem.as_view(), name='store-update'),
     path('products/retrieve/<int:item_id>/', StoreRetrieveItem.as_view(), name='store-retrieval'),
     path('products/product-groups/', ProductGroupViewSet.as_view({'get':'list'}), name='checkout'),
-    path('products/associate/', AssociateProductsView.as_view(), name='associate-products'),
+    path('products/associate/<int:pk>/', AssociateProductsView.as_view(), name='associate-products'),
     path('products/disassociate/', AssociateProductsDelete.as_view(), name='disassociate-products'),
     path('products/<int:pk>/disassociate/update/', AssociateProductsUpdate.as_view(), name='update-associate-product'),
     
